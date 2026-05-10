@@ -1,0 +1,76 @@
+.header {
+  height: 64px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 24px;
+
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+
+  position: sticky;
+  top: 0;
+
+  z-index: 10;
+}
+
+.logo {
+  color: var(--text-h);
+
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav a {
+  color: var(--text);
+
+  text-decoration: none;
+
+  padding: 8px 12px;
+  border-radius: 8px;
+
+  transition: 0.18s ease;
+}
+
+.nav a:hover {
+  background: var(--hover);
+  color: var(--text-h);
+}
+
+.navItem {
+  /* Сбрасываем дефолты */
+  background: none;
+  border: 1px solid transparent; /* Резервируем место под границу, чтобы не дергалось */
+  
+  color: var(--text);
+  text-decoration: none;
+  
+  padding: 8px 16px;
+  border-radius: 8px;
+  
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 500;
+  
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+/* Вот тут магия обводки и фона */
+.navItem:hover, .navItemActive {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border: 1px solid var(--accent-border); /* Та самая обводка из твоих переменных */
+}

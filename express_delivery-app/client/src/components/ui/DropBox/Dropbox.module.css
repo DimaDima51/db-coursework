@@ -1,0 +1,67 @@
+/* Dropbox.module.css */
+.dropdownBtn {
+  /* Копируем всё из .navItem */
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+}
+
+.dropdownBtn:hover, .active {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.dropdownContainer {
+  position: relative; /* Обязательно, чтобы меню позиционировалось относительно кнопки */
+  display: inline-block;
+}
+
+.dropdownContent {
+  position: absolute;
+  top: 100%; /* Меню строго под кнопкой */
+  right: 0;
+  left: auto;
+  z-index: 1000;
+  padding-top: 8px; /* Безопасная зона для мышки */
+  
+  /* Убираем растягивание вширь */
+  width: max-content; 
+  min-width: 200px;
+}
+
+.menuInner {
+  background: var(--bg); /* Твой темный фон подхватится сам */
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 8px;
+  
+  /* СТРОГО В КОЛОНКУ */
+  display: flex;
+  flex-direction: column; 
+  gap: 4px; 
+}
+
+.dropdownLink {
+  display: block; /* Ссылка на всю ширину */
+  white-space: nowrap; /* Чтобы текст не переносился */
+  color: var(--text);
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.dropdownLink:hover {
+  background: var(--accent-bg);
+  color: var(--accent);
+}
