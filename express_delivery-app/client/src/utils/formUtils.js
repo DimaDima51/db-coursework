@@ -158,9 +158,6 @@ export const validators = {
   },
 };
 
-/**
- * ХЕЛПЕР: Объединить несколько валидаторов
- */
 export const combineValidators = (...validatorFunctions) => (value) => {
   for (const validator of validatorFunctions) {
     const error = validator(value);

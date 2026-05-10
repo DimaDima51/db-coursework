@@ -148,7 +148,12 @@ export const EmployeesFormPage = () => {
             await updateEmployee(staff_number, payload);
         } else {
             payload.staff_number = Number(formData.staff_number);
-            await createEmployee(payload);
+            const response = await createEmployee(payload);
+            
+            // Показываем уведомление с сгенерированным паролем
+            if (response.generatedPassword) {
+                alert(`Сотрудник успешно создан!\n\nСгенерированный пароль: ${response.generatedPassword}\n\nПожалуйста, сохраните этот пароль и передайте сотруднику.`);
+            }
         }
         navigate('/employees');
     });

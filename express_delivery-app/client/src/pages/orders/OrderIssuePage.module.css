@@ -5,8 +5,7 @@
   border-radius: 16px;
   background: var(--bg);
   border: 1px solid rgba(0, 123, 255, 0.14);
-  
-  margin-top: 40px; 
+  margin-top: 40px;
 }
 
 .table {
@@ -28,6 +27,8 @@
 }
 
 .td {
+  border: 1px solid rgba(0, 123, 255, 0.16);
+  padding: 14px 18px;
   color: var(--text);
   vertical-align: middle;
 }
@@ -50,12 +51,12 @@
   transition: background-color 0.2s ease;
 }
 
-.tr[role="button"] {
-  cursor: pointer;
+.tr.selected {
+  background-color: rgba(0, 123, 255, 0.08);
 }
 
-.tr[role="button"]:hover {
-  background-color: rgba(0, 123, 255, 0.16);
+.tr.selected:hover {
+  background-color: rgba(0, 123, 255, 0.14);
 }
 
 .empty {

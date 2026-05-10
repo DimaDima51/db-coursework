@@ -1,12 +1,14 @@
 import express from 'express';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']));
 
-// GET all transfer acts
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const { position_name, pickup_point_index } = req.user;
+    const baseQuery = `
       SELECT ta.*, 
         sender_emp.first_name as sender_first_name,
         sender_emp.surname as sender_surname,
@@ -15,8 +17,14 @@ router.get('/', async (req, res) => {
       FROM transfer_act ta
       LEFT JOIN employee sender_emp ON ta.sender_staff_number = sender_emp.staff_number
       LEFT JOIN employee receiver_emp ON ta.receiver_staff_number = receiver_emp.staff_number
-      ORDER BY ta.creation_date DESC
-    `);
+    `;
+    const whereClause = position_name === 'Системный администратор'
+      ? ''
+      : `WHERE sender_emp.pickup_point_index = ? OR receiver_emp.pickup_point_index = ?`;
+    const [rows] = await pool.query(
+      `${baseQuery} ${whereClause} ORDER BY ta.creation_date DESC`,
+      position_name === 'Системный администратор' ? [] : [pickup_point_index, pickup_point_index]
+    );
     res.json(rows);
   } catch (err) {
     console.error(err.message);
@@ -24,22 +32,38 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET single transfer act with contents
 router.get('/:act_number', async (req, res) => {
   try {
     const { act_number } = req.params;
-    
-    const [actRows] = await pool.query(`
-      SELECT ta.*, 
-        sender_emp.first_name as sender_first_name,
-        sender_emp.surname as sender_surname,
-        receiver_emp.first_name as receiver_first_name,
-        receiver_emp.surname as receiver_surname
-      FROM transfer_act ta
-      LEFT JOIN employee sender_emp ON ta.sender_staff_number = sender_emp.staff_number
-      LEFT JOIN employee receiver_emp ON ta.receiver_staff_number = receiver_emp.staff_number
-      WHERE ta.act_number = ?
-    `, [act_number]);
+    const { position_name, pickup_point_index } = req.user;
+    const query = position_name === 'Системный администратор'
+      ? `
+        SELECT ta.*, 
+          sender_emp.first_name as sender_first_name,
+          sender_emp.surname as sender_surname,
+          receiver_emp.first_name as receiver_first_name,
+          receiver_emp.surname as receiver_surname
+        FROM transfer_act ta
+        LEFT JOIN employee sender_emp ON ta.sender_staff_number = sender_emp.staff_number
+        LEFT JOIN employee receiver_emp ON ta.receiver_staff_number = receiver_emp.staff_number
+        WHERE ta.act_number = ?
+      `
+      : `
+        SELECT ta.*, 
+          sender_emp.first_name as sender_first_name,
+          sender_emp.surname as sender_surname,
+          receiver_emp.first_name as receiver_first_name,
+          receiver_emp.surname as receiver_surname
+        FROM transfer_act ta
+        LEFT JOIN employee sender_emp ON ta.sender_staff_number = sender_emp.staff_number
+        LEFT JOIN employee receiver_emp ON ta.receiver_staff_number = receiver_emp.staff_number
+        WHERE ta.act_number = ?
+          AND (sender_emp.pickup_point_index = ? OR receiver_emp.pickup_point_index = ?)
+      `;
+    const params = position_name === 'Системный администратор'
+      ? [act_number]
+      : [act_number, pickup_point_index, pickup_point_index];
+    const [actRows] = await pool.query(query, params);
 
     if (actRows.length === 0) {
       return res.status(404).json({ message: 'Акт не найден' });
@@ -63,7 +87,6 @@ router.get('/:act_number', async (req, res) => {
   }
 });
 
-// POST create transfer act
 router.post('/', async (req, res) => {
   const connection = await pool.getConnection();
   try {
@@ -77,7 +100,6 @@ router.post('/', async (req, res) => {
       shipment_ipos
     } = req.body;
 
-    // Create transfer act
     await connection.query(
       `INSERT INTO transfer_act (
         act_number, creation_date, sender_staff_number, 
@@ -86,18 +108,15 @@ router.post('/', async (req, res) => {
       [act_number, creation_date, sender_staff_number, receiver_staff_number, shipment_ipos.length]
     );
 
-    // Add shipments to transfer act and update their status
     for (let i = 0; i < shipment_ipos.length; i++) {
       const ipo = shipment_ipos[i];
       
-      // Add to transfer act content
       await connection.query(
         `INSERT INTO transfer_act_content (act_number, item_no, ipo)
          VALUES (?, ?, ?)`,
         [act_number, i + 1, ipo]
       );
 
-      // Update shipment status to 'В пути' (In transit)
       await connection.query(
         `UPDATE shipment SET shipment_status = 'В пути' WHERE ipo = ?`,
         [ipo]
@@ -118,21 +137,34 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT update transfer act status (mark as received)
 router.put('/:act_number/receive', async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     const { act_number } = req.params;
+    const { position_name, pickup_point_index } = req.user;
 
-    // Get all shipments in this transfer act
+    const [existingActs] = await connection.query(
+      position_name === 'Системный администратор'
+        ? 'SELECT act_number FROM transfer_act WHERE act_number = ?'
+        : `SELECT ta.act_number FROM transfer_act ta
+           LEFT JOIN employee sender_emp ON ta.sender_staff_number = sender_emp.staff_number
+           LEFT JOIN employee receiver_emp ON ta.receiver_staff_number = receiver_emp.staff_number
+           WHERE ta.act_number = ? AND (sender_emp.pickup_point_index = ? OR receiver_emp.pickup_point_index = ?)`,
+      position_name === 'Системный администратор' ? [act_number] : [act_number, pickup_point_index, pickup_point_index]
+    );
+
+    if (existingActs.length === 0) {
+      await connection.rollback();
+      return res.status(404).json({ message: 'Акт не найден или доступ запрещен' });
+    }
+
     const [contentRows] = await connection.query(
       `SELECT ipo FROM transfer_act_content WHERE act_number = ?`,
       [act_number]
     );
 
-    // Update all shipments to 'Готова к выдаче' (Ready for delivery)
     for (const row of contentRows) {
       await connection.query(
         `UPDATE shipment SET shipment_status = 'Готова к выдаче' WHERE ipo = ?`,

@@ -18,10 +18,10 @@ const maskPhone = (value) => {
   // Ограничиваем длину 11 цифрами для телефона
   digits = digits.substring(0, 11);
 
-  // Если пусто — вернуть пустую строку, иначе строим маску
+  // Если пусто - вернуть пустую строку, иначе строим маску
   if (!digits) return '';
 
-  // Если номер начинается с 7 или 8 — используем как код страны
+  // Если номер начинается с 7 или 8 - используем как код страны
   let formatted = '+7(';
   const rest = digits.startsWith('7') || digits.startsWith('8')
     ? digits.substring(1)
@@ -41,7 +41,7 @@ const maskPhone = (value) => {
 const maskPassport = (value) => {
   // Оставляем только цифры
   let digits = value.replace(/\D/g, '');
-  // char(10) в БД — ровно 10 цифр
+  // char(10) в БД - ровно 10 цифр
   digits = digits.substring(0, 10);
 
   if (!digits) return '';
@@ -52,7 +52,7 @@ const maskPassport = (value) => {
 };
 
 const maskPostalIndex = (value) => {
-  // char(6) в БД — ровно 6 цифр
+  // char(6) в БД - ровно 6 цифр
   const digits = value.replace(/\D/g, '').substring(0, 6);
   return digits;
 };
@@ -125,7 +125,7 @@ export const ClientFormPage = () => {
       newErrors.first_name = 'Не более 100 символов';
     }
 
-    // patronymic: varchar(100), DEFAULT NULL — необязательное
+    // patronymic: varchar(100), DEFAULT NULL - необязательное
     if (form.patronymic.trim() && form.patronymic.trim().length > 100) {
       newErrors.patronymic = 'Не более 100 символов';
     }
@@ -174,7 +174,7 @@ export const ClientFormPage = () => {
       newErrors.house = 'Не более 255 символов';
     }
 
-    // email: varchar(100), DEFAULT NULL — необязательное поле
+    // email: varchar(100), DEFAULT NULL - необязательное поле
     if (form.email.trim()) {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
         newErrors.email = 'Некорректный email';
@@ -224,14 +224,14 @@ export const ClientFormPage = () => {
     try {
       // Формируем данные строго под структуру таблицы client
       const payload = {
-        // char(10) — только цифры без маски
+        // char(10) - только цифры без маски
         surname: form.surname.trim().substring(0, 100),
         first_name: form.first_name.trim().substring(0, 100),
-        // varchar(100) DEFAULT NULL — если пусто, отправляем null
+        // varchar(100) DEFAULT NULL - если пусто, отправляем null
         patronymic: form.patronymic.trim() || null,
-        // varchar(16) — отформатированный номер +7(XXX)XXX-XX-XX
+        // varchar(16) - отформатированный номер +7(XXX)XXX-XX-XX
         phone: form.phone,
-        // char(6) — 6 цифр
+        // char(6) - 6 цифр
         postal_index: form.postal_index.replace(/\D/g, ''),
         // varchar(255)
         region: form.region.trim().substring(0, 255),

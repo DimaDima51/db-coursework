@@ -1,16 +1,18 @@
 import styles from './Input.module.css';
 
-export const Input = ({ 
-  label, 
-  name, 
-  value, 
-  onChange, 
-  type = 'text', 
-  placeholder = '', 
+export const Input = ({
+  label,
+  name,
+  value,
+  onChange,
+  type = 'text',
+  placeholder = '',
   required = false,
   error = null,
   disabled = false,
-  maxLength = undefined
+  maxLength = undefined,
+  readOnly = false,
+  step = undefined
 }) => {
   return (
     <div className={styles.inputGroup}>
@@ -29,7 +31,9 @@ export const Input = ({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
+        readOnly={readOnly}
         maxLength={maxLength}
+        step={step}
         className={`${styles.input} ${error ? styles.inputError : ''} ${disabled ? styles.inputDisabled : ''}`}
       />
       {error && <span className={styles.errorMessage}>{error}</span>}

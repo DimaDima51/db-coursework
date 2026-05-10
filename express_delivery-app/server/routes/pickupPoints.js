@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -74,7 +75,7 @@ router.get('/:index/schedules', async (req, res) => {
 });
 
 // POST /api/pickup-points - создать новый пункт выдачи
-router.post('/', async (req, res) => {
+router.post('/', requireRole(['Системный администратор']), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -92,7 +93,7 @@ router.post('/', async (req, res) => {
       hotline_phone,
       work_mode,
       services,
-      special_schedules // Добавлено
+      special_schedules
     } = req.body;
 
     await connection.beginTransaction();
@@ -154,7 +155,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/pickup-points/:index - обновить пункт выдачи
-router.put('/:index', async (req, res) => {
+router.put('/:index', requireRole(['Системный администратор']), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -172,7 +173,7 @@ router.put('/:index', async (req, res) => {
       hotline_phone,
       work_mode,
       services,
-      special_schedules // Добавлено
+      special_schedules
     } = req.body;
 
     await connection.beginTransaction();
@@ -239,7 +240,7 @@ router.put('/:index', async (req, res) => {
 });
 
 // DELETE /api/pickup-points/:index - удалить пункт выдачи
-router.delete('/:index', async (req, res) => {
+router.delete('/:index', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const { index } = req.params;
 

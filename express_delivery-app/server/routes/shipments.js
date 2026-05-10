@@ -1,12 +1,16 @@
 import express from 'express';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']));
 
-// GET all shipments
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM shipment');
+    const { position_name, pickup_point_index } = req.user;
+    const [rows] = position_name === 'Системный администратор'
+      ? await pool.query('SELECT * FROM shipment')
+      : await pool.query('SELECT * FROM shipment WHERE pickup_point_index = ?', [pickup_point_index]);
     res.json(rows);
   } catch (err) {
     console.error(err.message);
@@ -14,14 +18,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET demanded shipments (not unclaimed, not utilized)
 router.get('/demanded', async (req, res) => {
   try {
-    const [rows] = await pool.query(`
+    const { position_name, pickup_point_index } = req.user;
+    const text = `
       SELECT * FROM shipment 
       WHERE shipment_status NOT IN ('Не востребована', 'Утилизирована')
+      ${position_name === 'Системный администратор' ? '' : 'AND pickup_point_index = ?'}
       ORDER BY registration_date DESC
-    `);
+    `;
+    const [rows] = position_name === 'Системный администратор'
+      ? await pool.query(text)
+      : await pool.query(text, [pickup_point_index]);
     res.json(rows);
   } catch (err) {
     console.error(err.message);
@@ -29,10 +37,9 @@ router.get('/demanded', async (req, res) => {
   }
 });
 
-// GET unclaimed shipments
 router.get('/unclaimed', async (req, res) => {
   try {
-    // Mark shipments as utilized if status = unclaimed and > 30 days old
+    const { position_name, pickup_point_index } = req.user;
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
@@ -44,11 +51,15 @@ router.get('/unclaimed', async (req, res) => {
         AND registration_date < ?
     `, [thirtyDaysAgoStr]);
 
-    const [rows] = await pool.query(`
+    const text = `
       SELECT * FROM shipment 
       WHERE shipment_status IN ('Не востребована', 'Утилизирована')
+      ${position_name === 'Системный администратор' ? '' : 'AND pickup_point_index = ?'}
       ORDER BY registration_date DESC
-    `);
+    `;
+    const [rows] = position_name === 'Системный администратор'
+      ? await pool.query(text)
+      : await pool.query(text, [pickup_point_index]);
     res.json(rows);
   } catch (err) {
     console.error(err.message);
@@ -56,16 +67,20 @@ router.get('/unclaimed', async (req, res) => {
   }
 });
 
-// GET single shipment
 router.get('/:ipo', async (req, res) => {
   try {
     const { ipo } = req.params;
-    const [rows] = await pool.query('SELECT * FROM shipment WHERE ipo = ?', [ipo]);
-    
+    const { position_name, pickup_point_index } = req.user;
+    const query = position_name === 'Системный администратор'
+      ? 'SELECT * FROM shipment WHERE ipo = ?'
+      : 'SELECT * FROM shipment WHERE ipo = ? AND pickup_point_index = ?';
+    const params = position_name === 'Системный администратор' ? [ipo] : [ipo, pickup_point_index];
+    const [rows] = await pool.query(query, params);
+
     if (rows.length === 0) {
       return res.status(404).json({ message: 'Отправление не найдено' });
     }
-    
+
     res.json(rows[0]);
   } catch (err) {
     console.error(err.message);
@@ -73,7 +88,6 @@ router.get('/:ipo', async (req, res) => {
   }
 });
 
-// POST create shipment with receipt
 router.post('/', async (req, res) => {
   const connection = await pool.getConnection();
   try {
@@ -97,16 +111,19 @@ router.post('/', async (req, res) => {
       additional_service_cost,
       total_payable,
       registration_date,
-      // Receipt data
       cash_register_number,
       shift_number,
       shipping_method,
       operation_time,
-      // Inventory data (optional)
       inventory_items
     } = req.body;
 
-    // Create shipment
+    const { position_name, pickup_point_index: userPickupPoint } = req.user;
+
+    if (position_name !== 'Системный администратор' && pickup_point_index !== userPickupPoint) {
+      return res.status(403).json({ message: 'Нельзя создавать отправление для другого отделения' });
+    }
+
     await connection.query(
       `INSERT INTO shipment (
         ipo, sender_passport_number, receiver_passport_number, staff_number,
@@ -122,7 +139,6 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    // Create receipt
     await connection.query(
       `INSERT INTO receipt (
         ipo, cash_register_number, shift_number, staff_number, 
@@ -134,7 +150,6 @@ router.post('/', async (req, res) => {
       ]
     );
 
-    // Create inventory items if provided
     if (inventory_items && Array.isArray(inventory_items) && inventory_items.length > 0) {
       for (let i = 0; i < inventory_items.length; i++) {
         const item = inventory_items[i];
@@ -161,18 +176,20 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT mark shipment as issued
 router.put('/:ipo/issue', async (req, res) => {
   try {
     const { ipo } = req.params;
+    const { position_name, pickup_point_index } = req.user;
 
-    const [result] = await pool.query(
-      `UPDATE shipment SET shipment_status = 'Выдана' WHERE ipo = ?`,
-      [ipo]
-    );
+    const query = position_name === 'Системный администратор'
+      ? `UPDATE shipment SET shipment_status = 'Выдана' WHERE ipo = ?`
+      : `UPDATE shipment SET shipment_status = 'Выдана' WHERE ipo = ? AND pickup_point_index = ?`;
+    const params = position_name === 'Системный администратор' ? [ipo] : [ipo, pickup_point_index];
+
+    const [result] = await pool.query(query, params);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Отправление не найдено' });
+      return res.status(404).json({ message: 'Отправление не найдено или доступ запрещен' });
     }
 
     res.json({ message: 'Отправление выдано' });
@@ -182,19 +199,21 @@ router.put('/:ipo/issue', async (req, res) => {
   }
 });
 
-// PUT update shipment status
 router.put('/:ipo/status', async (req, res) => {
   try {
     const { ipo } = req.params;
     const { shipment_status } = req.body;
+    const { position_name, pickup_point_index } = req.user;
 
-    const [result] = await pool.query(
-      `UPDATE shipment SET shipment_status = ? WHERE ipo = ?`,
-      [shipment_status, ipo]
-    );
+    const query = position_name === 'Системный администратор'
+      ? 'UPDATE shipment SET shipment_status = ? WHERE ipo = ?'
+      : 'UPDATE shipment SET shipment_status = ? WHERE ipo = ? AND pickup_point_index = ?';
+    const params = position_name === 'Системный администратор' ? [shipment_status, ipo] : [shipment_status, ipo, pickup_point_index];
+
+    const [result] = await pool.query(query, params);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Отправление не найдено' });
+      return res.status(404).json({ message: 'Отправление не найдено или доступ запрещен' });
     }
 
     res.json({ message: 'Статус отправления обновлен' });

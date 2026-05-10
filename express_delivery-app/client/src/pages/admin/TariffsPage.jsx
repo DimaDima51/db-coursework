@@ -12,7 +12,6 @@ import styles from "./../default.module.css";
 const formatDateForDisplay = (dateString) => {
   if (!dateString) return '';
   
-  // Если дата в формате YYYY-MM-DD или с временем
   const date = new Date(dateString);
   if (!isNaN(date.getTime())) {
     return date.toLocaleDateString('ru-RU');

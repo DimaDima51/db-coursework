@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Создать новый тариф
-router.post('/', async (req, res) => {
+router.post('/', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const {
       tariff_code,
@@ -57,7 +58,7 @@ router.post('/', async (req, res) => {
 });
 
 // Обновить тариф
-router.put('/:tariff_code', async (req, res) => {
+router.put('/:tariff_code', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const { tariff_code } = req.params;
     const {
@@ -93,7 +94,7 @@ router.put('/:tariff_code', async (req, res) => {
 });
 
 // Удалить тариф
-router.delete('/:tariff_code', async (req, res) => {
+router.delete('/:tariff_code', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const { tariff_code } = req.params;
 

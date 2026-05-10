@@ -13,9 +13,60 @@ const maskPostalIndex = (value) => {
   return digits;
 };
 
+const maskTime = (value) => {
+  if (!value) return '';
+
+  let digits = value.replace(/\D/g, '');
+  digits = digits.substring(0, 4);
+
+  if (digits.length === 0) return '';
+
+  // Проверяем часы (первые 2 цифры)
+  let hours = digits.substring(0, 2);
+  if (hours.length === 2) {
+    if (parseInt(hours) > 23) {
+      hours = '23';
+    }
+  }
+
+  // Форматируем как HH:MM
+  if (digits.length <= 2) {
+    return hours;
+  } else {
+    let minutes = digits.substring(2, 4);
+    if (minutes.length === 2 && parseInt(minutes) > 59) {
+      minutes = '59';
+    }
+    return `${hours}:${minutes}`;
+  }
+};
+
+// Обновите updateSpecialSchedule:
+const updateSpecialSchedule = (index, field, value) => {
+  setSpecialSchedules(prev => {
+    const updated = [...prev];
+
+    // Применяем маску для времени
+    if (field === 'start_time' || field === 'end_time') {
+      value = maskTime(value);
+    }
+
+    updated[index] = { ...updated[index], [field]: value };
+
+    // Автоматически очищаем ошибку времени при изменении
+    if (field === 'start_time' || field === 'end_time') {
+      const schedule = updated[index];
+      if (schedule.start_time && schedule.end_time && schedule.start_time < schedule.end_time) {
+        updated[index] = { ...schedule, timeError: undefined };
+      }
+    }
+
+    return updated;
+  });
+};
+
 // Маска для телефона
 const maskPhone = (value) => {
-
   if (!value) return '';
 
   let digits = value.replace(/\D/g, '');
@@ -39,7 +90,7 @@ export const PickupPointFormPage = () => {
   const { index } = useParams();
   const location = useLocation();
   const isEditMode = !!index;
-  
+
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [services, setServices] = useState([]);
@@ -93,18 +144,17 @@ export const PickupPointFormPage = () => {
           work_mode: point.work_mode || ''
         });
 
-        // Загружаем услуги пункта выдачи
-        try {
-          const servicesResponse = await getPickupPointServices(point.pickup_point_index);
-          setSelectedServices(servicesResponse.data.map(s => s.service_name));
-        } catch (err) {
-          console.error('Ошибка при загрузке услуг пункта выдачи:', err);
-        }
-
         // Загружаем специальные расписания
         try {
           const schedulesResponse = await getSpecialSchedules(point.pickup_point_index);
-          setSpecialSchedules(schedulesResponse.data);
+          const formattedSchedules = schedulesResponse.data.map(schedule => ({
+            ...schedule,
+            schedule_date: schedule.schedule_date || '',
+            // Обрезаем секунды у времени, если они есть
+            start_time: schedule.start_time ? schedule.start_time.substring(0, 5) : '09:00',
+            end_time: schedule.end_time ? schedule.end_time.substring(0, 5) : '18:00'
+          }));
+          setSpecialSchedules(formattedSchedules);
         } catch (err) {
           console.error('Ошибка при загрузке специальных расписаний:', err);
         }
@@ -112,6 +162,40 @@ export const PickupPointFormPage = () => {
     };
     loadPickupPointData();
   }, [isEditMode, location.state, index]);
+
+  // Валидация времени для специальных расписаний
+  const validateSpecialSchedules = () => {
+    const scheduleErrors = [];
+
+    specialSchedules.forEach((schedule, idx) => {
+      const scheduleError = {};
+
+      if (!schedule.schedule_date) {
+        scheduleError.schedule_date = 'Дата обязательна';
+      }
+
+      if (!schedule.start_time) {
+        scheduleError.start_time = 'Время начала обязательно';
+      }
+
+      if (!schedule.end_time) {
+        scheduleError.end_time = 'Время окончания обязательно';
+      }
+
+      // Проверяем, что время начала раньше времени окончания
+      if (schedule.start_time && schedule.end_time) {
+        if (schedule.start_time >= schedule.end_time) {
+          scheduleError.time = 'Время начала должно быть раньше времени окончания';
+        }
+      }
+
+      if (Object.keys(scheduleError).length > 0) {
+        scheduleErrors.push({ index: idx, errors: scheduleError });
+      }
+    });
+
+    return scheduleErrors;
+  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -215,9 +299,9 @@ export const PickupPointFormPage = () => {
       formattedValue = maskPhone(value);
     }
 
-    setForm(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : formattedValue 
+    setForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : formattedValue
     }));
 
     if (errors[name]) {
@@ -259,14 +343,55 @@ export const PickupPointFormPage = () => {
   const updateSpecialSchedule = (index, field, value) => {
     setSpecialSchedules(prev => {
       const updated = [...prev];
+
+      // Для времени убираем секунды, если они есть
+      if ((field === 'start_time' || field === 'end_time') && value) {
+        value = value.substring(0, 5);
+      }
+
       updated[index] = { ...updated[index], [field]: value };
+
+      // Автоматически очищаем ошибку времени при изменении
+      if (field === 'start_time' || field === 'end_time') {
+        const schedule = updated[index];
+        if (schedule.start_time && schedule.end_time && schedule.start_time < schedule.end_time) {
+          updated[index] = { ...schedule, timeError: undefined };
+        }
+      }
+
       return updated;
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const newErrors = validateForm();
+    const scheduleErrors = validateSpecialSchedules();
+
+    // Проверяем ошибки специальных расписаний
+    if (scheduleErrors.length > 0) {
+      // Добавляем ошибки к специальным расписаниям
+      setSpecialSchedules(prev =>
+        prev.map((schedule, idx) => {
+          const error = scheduleErrors.find(e => e.index === idx);
+          if (error) {
+            return {
+              ...schedule,
+              errors: error.errors,
+              timeError: error.errors.time
+            };
+          }
+          return schedule;
+        })
+      );
+
+      if (Object.keys(newErrors).length === 0) {
+        // Если нет других ошибок, просто не отправляем форму
+        return;
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -274,6 +399,15 @@ export const PickupPointFormPage = () => {
 
     setLoading(true);
     try {
+      const validSchedules = specialSchedules
+        .filter(s => s.schedule_date)
+        .map(schedule => ({
+          schedule_date: schedule.schedule_date,
+          start_time: schedule.start_time,
+          end_time: schedule.end_time,
+          note: schedule.note
+        }));
+
       const payload = {
         pickup_point_index: form.pickup_point_index.replace(/\D/g, ''),
         branch_name: form.branch_name.trim(),
@@ -288,7 +422,7 @@ export const PickupPointFormPage = () => {
         hotline_phone: form.hotline_phone.trim() || null,
         work_mode: form.work_mode.trim(),
         services: selectedServices,
-        special_schedules: specialSchedules.filter(s => s.schedule_date) // Только с указанной датой
+        special_schedules: validSchedules
       };
 
       if (isEditMode) {
@@ -488,16 +622,16 @@ export const PickupPointFormPage = () => {
             <div className={styles.formSection}>
               <h2 className={styles.sectionTitle}>
                 Специальные расписания
-                <Button 
-                  type="button" 
-                  variant="secondary" 
+                <Button
+                  type="button"
+                  variant="secondary"
                   onClick={addSpecialSchedule}
                   style={{ marginLeft: '10px', padding: '4px 8px', fontSize: '12px' }}
                 >
                   + Добавить расписание
                 </Button>
               </h2>
-              
+
               {specialSchedules.length === 0 ? (
                 <p style={{ color: '#666', fontStyle: 'italic' }}>Нет специальных расписаний</p>
               ) : (
@@ -512,22 +646,29 @@ export const PickupPointFormPage = () => {
                           value={schedule.schedule_date}
                           onChange={(e) => updateSpecialSchedule(idx, 'schedule_date', e.target.value)}
                           required
+                          error={schedule.errors?.schedule_date}
                         />
                         <Input
-                          label="Начало работы"
+                          label="Начало работы (24ч)"
                           name={`start_time_${idx}`}
-                          type="time"
+                          type="text"
                           value={schedule.start_time}
                           onChange={(e) => updateSpecialSchedule(idx, 'start_time', e.target.value)}
+                          placeholder="09:00"
                           required
+                          maxLength={5}
+                          error={schedule.errors?.start_time}
                         />
                         <Input
-                          label="Окончание работы"
+                          label="Окончание работы (24ч)"
                           name={`end_time_${idx}`}
-                          type="time"
+                          type="text"
                           value={schedule.end_time}
                           onChange={(e) => updateSpecialSchedule(idx, 'end_time', e.target.value)}
+                          placeholder="18:00"
                           required
+                          maxLength={5}
+                          error={schedule.errors?.end_time || schedule.errors?.time}
                         />
                         <Input
                           label="Примечание"
@@ -546,6 +687,11 @@ export const PickupPointFormPage = () => {
                           ✕
                         </Button>
                       </div>
+                      {schedule.timeError && (
+                        <div style={{ color: '#dc3545', fontSize: '12px', marginTop: '4px' }}>
+                          {schedule.timeError}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

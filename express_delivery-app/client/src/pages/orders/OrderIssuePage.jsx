@@ -7,6 +7,7 @@ import { Loader } from '../../components/ui/Loader/Loader';
 import { useAsyncData } from '../../hooks/useAsyncData';
 import { getShipments, issueShipment } from '../../api/axios';
 import { useState, useMemo } from 'react';
+import tableStyles from './OrderIssuePage.module.css';
 
 const statusColors = {
   'Принято': '#4CAF50',
@@ -33,10 +34,9 @@ export const OrderIssuePage = () => {
 
   const shipments = data ?? [];
 
-  // Фильтрация: исключаем "Выдана" и фильтруем по поиску
   const filteredShipments = useMemo(() => {
     return shipments
-      .filter(shipment => shipment.shipment_status !== 'Выдана') // Не показываем выданные
+      .filter(shipment => shipment.shipment_status !== 'Выдана')
       .filter(shipment => {
         if (!searchTerm) return true;
         
@@ -50,18 +50,15 @@ export const OrderIssuePage = () => {
       });
   }, [shipments, searchTerm]);
 
-  // Проверяем, можно ли выдать посылку
   const canIssueShipment = (status) => {
     return status !== 'Выдана' && status !== 'В пути';
   };
 
-  // Получаем только те посылки, которые можно выдать
   const issueableShipments = useMemo(() => {
     return filteredShipments.filter(s => canIssueShipment(s.shipment_status));
   }, [filteredShipments]);
 
   const handleCheckboxChange = (ipo) => {
-    // Разрешаем выбирать только те, которые можно выдать
     const shipment = shipments.find(s => s.ipo === ipo);
     if (!shipment || !canIssueShipment(shipment.shipment_status)) return;
 
@@ -167,8 +164,7 @@ export const OrderIssuePage = () => {
           <h2>Выдача посылок</h2>
         </div>
 
-        {/* Search section */}
-        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#1a1a1a', borderRadius: '4px' }}>
           <Input
             label="Поиск по IPO или паспорту"
             type="text"
@@ -182,7 +178,6 @@ export const OrderIssuePage = () => {
           </div>
         </div>
 
-        {/* Bulk actions */}
         {filteredShipments.length > 0 && (
           <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
             <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: '8px' }}>
@@ -211,59 +206,31 @@ export const OrderIssuePage = () => {
           </div>
         )}
 
-        {/* Shipments table */}
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{
-            width: '100%',
-            borderCollapse: 'collapse',
-            backgroundColor: '#fff',
-            border: '1px solid #ddd'
-          }}>
+        <div className={tableStyles.tableWrapper}>
+          <table className={tableStyles.table}>
             <thead>
-              <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
-                <th style={{
-                  padding: '12px',
-                  textAlign: 'center',
-                  fontWeight: 'bold',
-                  borderRight: '1px solid #ddd',
-                  width: '50px'
-                }}>
-                  ☑
+              <tr>
+                <th className={tableStyles.th} style={{ width: '50px', textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedShipments.size === issueableShipments.length && issueableShipments.length > 0}
+                    onChange={handleSelectAll}
+                    disabled={issueableShipments.length === 0}
+                  />
                 </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
-                  IPO
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
-                  Отправитель
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
-                  Получатель
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
-                  Тип
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
-                  Статус
-                </th>
-                <th style={{ padding: '12px', textAlign: 'left', fontWeight: 'bold', borderRight: '1px solid #ddd' }}>
-                  Дата
-                </th>
-                <th style={{ padding: '12px', textAlign: 'center', fontWeight: 'bold' }}>
-                  Действие
-                </th>
+                <th className={tableStyles.th}>IPO</th>
+                <th className={tableStyles.th}>Отправитель</th>
+                <th className={tableStyles.th}>Получатель</th>
+                <th className={tableStyles.th}>Тип</th>
+                <th className={tableStyles.th}>Статус</th>
+                <th className={tableStyles.th}>Дата</th>
+                <th className={tableStyles.th} style={{ textAlign: 'center' }}>Действие</th>
               </tr>
             </thead>
             <tbody>
               {filteredShipments.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="8"
-                    style={{
-                      padding: '20px',
-                      textAlign: 'center',
-                      color: '#999'
-                    }}
-                  >
+                  <td colSpan="8" className={tableStyles.empty}>
                     {searchTerm ? 'По вашему запросу ничего не найдено' : 'Нет посылок для выдачи'}
                   </td>
                 </tr>
@@ -274,12 +241,9 @@ export const OrderIssuePage = () => {
                   return (
                     <tr
                       key={shipment.ipo}
-                      style={{
-                        borderBottom: '1px solid #eee',
-                        backgroundColor: selectedShipments.has(shipment.ipo) ? '#e3f2fd' : 'transparent'
-                      }}
+                      className={`${tableStyles.tr} ${selectedShipments.has(shipment.ipo) ? tableStyles.selected : ''}`}
                     >
-                      <td style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #eee' }}>
+                      <td className={tableStyles.td} style={{ textAlign: 'center' }}>
                         {isIssueable ? (
                           <input
                             type="checkbox"
@@ -287,24 +251,22 @@ export const OrderIssuePage = () => {
                             onChange={() => handleCheckboxChange(shipment.ipo)}
                           />
                         ) : (
-                          <span style={{ color: '#999' }} title="Нельзя выдать">—</span>
+                          <span style={{ color: '#999' }} title="Нельзя выдать">-</span>
                         )}
                       </td>
-                      <td style={{ padding: '12px', borderRight: '1px solid #eee', fontWeight: 'bold' }}>
+                      <td className={tableStyles.td} style={{ fontWeight: 'bold' }}>
                         {shipment.ipo}
                       </td>
-                      <td style={{ padding: '12px', borderRight: '1px solid #eee' }}>
-                        {shipment.sender_passport_number}
+                      <td className={tableStyles.td}>
+                        {shipment.sender_passport_number || '-'}
                       </td>
-                      <td style={{ padding: '12px', borderRight: '1px solid #eee' }}>
-                        {shipment.receiver_passport_number}
+                      <td className={tableStyles.td}>
+                        {shipment.receiver_passport_number || '-'}
                       </td>
-                      <td style={{ padding: '12px', borderRight: '1px solid #eee' }}>
-                        {shipment.package_type}
+                      <td className={tableStyles.td}>
+                        {shipment.package_type || '-'}
                       </td>
-                      <td style={{
-                        padding: '12px',
-                        borderRight: '1px solid #eee',
+                      <td className={tableStyles.td} style={{ 
                         color: getStatusColor(shipment.shipment_status),
                         fontWeight: 'bold'
                       }}>
@@ -315,32 +277,34 @@ export const OrderIssuePage = () => {
                           </span>
                         )}
                       </td>
-                      <td style={{ padding: '12px', borderRight: '1px solid #eee' }}>
+                      <td className={tableStyles.td}>
                         {shipment.registration_date ? new Date(shipment.registration_date).toLocaleDateString('ru-RU') : '-'}
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'center' }}>
-                        {isIssueable ? (
-                          <Button
-                            variant="primary"
-                            onClick={() => handleIssueShipment(shipment.ipo)}
-                            loading={processingIpo === shipment.ipo}
-                            disabled={processingIpo !== null}
-                            style={{
-                              padding: '6px 12px',
-                              fontSize: '12px'
-                            }}
-                          >
-                            Выдать
-                          </Button>
-                        ) : (
-                          <span style={{ 
-                            color: '#999', 
-                            fontSize: '12px',
-                            fontStyle: 'italic'
-                          }}>
-                            {shipment.shipment_status === 'В пути' ? 'В пути' : 'Недоступно'}
-                          </span>
-                        )}
+                      <td className={tableStyles.td}>
+                        <div className={tableStyles.actions}>
+                          {isIssueable ? (
+                            <Button
+                              variant="primary"
+                              onClick={() => handleIssueShipment(shipment.ipo)}
+                              loading={processingIpo === shipment.ipo}
+                              disabled={processingIpo !== null}
+                              style={{
+                                padding: '6px 12px',
+                                fontSize: '12px'
+                              }}
+                            >
+                              Выдать
+                            </Button>
+                          ) : (
+                            <span style={{ 
+                              color: '#999', 
+                              fontSize: '12px',
+                              fontStyle: 'italic'
+                            }}>
+                              {shipment.shipment_status === 'В пути' ? 'В пути' : 'Недоступно'}
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -351,9 +315,19 @@ export const OrderIssuePage = () => {
         </div>
 
         {filteredShipments.length > 0 && (
-          <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '4px', display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ 
+            marginTop: '15px', 
+            padding: '15px', 
+            backgroundColor: 'rgba(0, 123, 255, 0.05)', 
+            borderRadius: '8px', 
+            display: 'flex', 
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '14px',
+            color: '#666'
+          }}>
             <span>Показано: <strong>{filteredShipments.length}</strong> посылок</span>
-            <span style={{ color: '#666' }}>
+            <span>
               Доступно для выдачи: <strong style={{ color: '#FF9800' }}>{issueableShipments.length}</strong>
             </span>
           </div>

@@ -25,7 +25,7 @@ export const OrderCreatePage = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [dataLoading, setDataLoading] = useState(true);
-  
+
   const [clients, setClients] = useState([]);
   const [employees, setEmployees] = useState([]);
   const [pickupPoints, setPickupPoints] = useState([]);
@@ -53,7 +53,6 @@ export const OrderCreatePage = () => {
     // Receipt data
     cash_register_number: '',
     shift_number: '',
-    shipping_method: '',
     operation_time: new Date().toTimeString().substring(0, 5),
   });
 
@@ -89,7 +88,6 @@ export const OrderCreatePage = () => {
     loadData();
   }, []);
 
-  // Generate IPO if not set
   useEffect(() => {
     if (!form.ipo) {
       const timestamp = Date.now().toString().substring(0, 15);
@@ -97,7 +95,6 @@ export const OrderCreatePage = () => {
     }
   }, []);
 
-  // Transform data for Select components
   const clientOptions = clients.map(client => ({
     value: client.passport_number,
     label: `${client.surname} ${client.first_name} ${client.patronymic || ''} (${client.passport_number})`
@@ -118,13 +115,12 @@ export const OrderCreatePage = () => {
     label: `Тариф ${tariff.tariff_code} - ${Number(tariff.tariff_up_to_500g).toFixed(2)} руб.`
   }));
 
-  // Calculate shipment cost based on algorithm
   const calculateCost = useCallback(() => {
     if (!form.tariff_code || !tariffs || tariffs.length === 0) {
       return { baseCost: 0, additionalCost: 0, totalCost: 0 };
     }
 
-    const selectedTariff = tariffs.find(t => 
+    const selectedTariff = tariffs.find(t =>
       String(t.tariff_code) === String(form.tariff_code)
     );
 
@@ -137,20 +133,16 @@ export const OrderCreatePage = () => {
     const width = parseFloat(form.width_cm) || 0;
     const height = parseFloat(form.height_cm) || 0;
 
-    // Calculate volumetric weight: (L * W * H) / 5000
     const volumetricWeight = (length * width * height) / 5000;
-    
-    // Weight for payment: max(actual_weight, volumetric_weight)
+
     const weightForPayment = Math.max(actualWeight, volumetricWeight);
 
-    // Safe number conversion
     const tariffUpTo500 = parseFloat(selectedTariff.tariff_up_to_500g) || 0;
     const tariffUpTo1kg = parseFloat(selectedTariff.tariff_up_to_1kg) || 0;
     const additional500Charge = parseFloat(selectedTariff.additional_500g_charge) || 0;
     const oversizePercent = parseFloat(selectedTariff.oversize_surcharge) || 0;
     const carefulPercent = parseFloat(selectedTariff.careful_surcharge) || 0;
 
-    // Base cost calculation
     let baseCost = 0;
     if (weightForPayment <= 0.5) {
       baseCost = tariffUpTo500;
@@ -161,17 +153,14 @@ export const OrderCreatePage = () => {
       baseCost = tariffUpTo1kg + (additionalUnits * additional500Charge);
     }
 
-    // Additional charges
     let oversizeCharge = 0;
     let carefulCharge = 0;
 
-    // Oversize surcharge
     const isOversize = length > 60 || width > 40 || height > 20;
     if (isOversize) {
       oversizeCharge = baseCost * (oversizePercent / 100);
     }
 
-    // Careful handling surcharge for EMS packages
     if (form.package_type === 'EMS') {
       carefulCharge = baseCost * (carefulPercent / 100);
     }
@@ -186,9 +175,8 @@ export const OrderCreatePage = () => {
     };
   }, [form.tariff_code, form.actual_weight, form.length_cm, form.width_cm, form.height_cm, form.package_type, tariffs]);
 
-  // Update costs when relevant fields change
   useEffect(() => {
-    const hasRequiredFields = 
+    const hasRequiredFields =
       form.tariff_code &&
       form.actual_weight && parseFloat(form.actual_weight) > 0 &&
       form.length_cm && parseFloat(form.length_cm) > 0 &&
@@ -197,7 +185,7 @@ export const OrderCreatePage = () => {
 
     if (hasRequiredFields) {
       const costs = calculateCost();
-      
+
       if (costs.totalCost > 0) {
         setForm(prev => ({
           ...prev,
@@ -293,11 +281,6 @@ export const OrderCreatePage = () => {
     if (!form.shift_number || parseInt(form.shift_number) <= 0) {
       newErrors.shift_number = 'Номер смены обязателен';
     }
-
-    if (!form.shipping_method.trim()) {
-      newErrors.shipping_method = 'Способ доставки обязателен';
-    }
-
     return newErrors;
   };
 
@@ -376,18 +359,16 @@ export const OrderCreatePage = () => {
         additional_service_cost: form.additional_service_cost ? parseFloat(form.additional_service_cost) : null,
         total_payable: parseFloat(form.total_payable),
         registration_date: form.registration_date,
-        // Receipt data
         cash_register_number: form.cash_register_number.trim(),
         shift_number: parseInt(form.shift_number),
-        shipping_method: form.shipping_method.trim(),
         operation_time: form.operation_time,
         // Inventory - отправляем только если опись включена
-        inventory_items: hasInventory && inventoryItems.length > 0 
+        inventory_items: hasInventory && inventoryItems.length > 0
           ? inventoryItems.map(item => ({
-              item_name: item.item_name,
-              item_count: parseInt(item.item_count),
-              declared_value_per_unit: parseFloat(item.declared_value_per_unit)
-            }))
+            item_name: item.item_name,
+            item_count: parseInt(item.item_count),
+            declared_value_per_unit: parseFloat(item.declared_value_per_unit)
+          }))
           : []
       };
 
@@ -450,7 +431,6 @@ export const OrderCreatePage = () => {
                   required
                   maxLength={14}
                   error={errors.ipo}
-                  readOnly
                 />
                 <Input
                   label="Дата регистрации"
@@ -610,7 +590,7 @@ export const OrderCreatePage = () => {
                   type="number"
                   step="0.01"
                   value={form.service_cost || ''}
-                  readOnly
+                  readOnly={true}
                   placeholder="Рассчитывается автоматически"
                   required
                   error={errors.service_cost}
@@ -621,7 +601,7 @@ export const OrderCreatePage = () => {
                   type="number"
                   step="0.01"
                   value={form.additional_service_cost || ''}
-                  readOnly
+                  readOnly={true}
                   placeholder="Рассчитывается автоматически"
                   error={errors.additional_service_cost}
                 />
@@ -631,7 +611,7 @@ export const OrderCreatePage = () => {
                   type="number"
                   step="0.01"
                   value={form.total_payable || ''}
-                  readOnly
+                  readOnly={true}
                   placeholder="Рассчитывается автоматически"
                   required
                   error={errors.total_payable}
@@ -666,21 +646,13 @@ export const OrderCreatePage = () => {
                 <Input
                   label="Время операции"
                   name="operation_time"
-                  type="time"
+                  type="text"
                   value={form.operation_time}
                   onChange={handleChange}
+                  placeholder="09:00"
                   required
+                  maxLength={5}
                   error={errors.operation_time}
-                />
-                <Input
-                  label="Способ доставки"
-                  name="shipping_method"
-                  value={form.shipping_method}
-                  onChange={handleChange}
-                  placeholder="Курьером, Самовывоз и т.д."
-                  required
-                  maxLength={100}
-                  error={errors.shipping_method}
                 />
               </div>
             </div>
@@ -724,8 +696,8 @@ export const OrderCreatePage = () => {
                       placeholder="100.00"
                     />
                   </div>
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="secondary"
                     onClick={handleAddInventoryItem}
                     style={{ marginBottom: '15px' }}
@@ -734,12 +706,12 @@ export const OrderCreatePage = () => {
                   </Button>
 
                   {inventoryItems.length > 0 && (
-                    <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '4px' }}>
+                    <div style={{ marginTop: '15px', padding: '10px', backgroundColor: '#a1a1a1', borderRadius: '4px' }}>
                       <h3>Добавленные предметы:</h3>
                       {inventoryItems.map((item, idx) => (
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #ddd' }}>
                           <span>{idx + 1}. {item.item_name} × {item.item_count} ({item.declared_value_per_unit} руб./шт.)</span>
-                          <Button 
+                          <Button
                             type="button"
                             variant="danger"
                             onClick={() => handleRemoveInventoryItem(idx)}

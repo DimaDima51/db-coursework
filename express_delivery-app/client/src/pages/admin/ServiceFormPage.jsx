@@ -9,7 +9,7 @@ import { createService, updateService } from '../../api/axios';
 
 export const ServiceFormPage = () => {
   const navigate = useNavigate();
-  const { name } = useParams(); // Изменено с serviceName на name
+  const { name } = useParams();
   const location = useLocation();
   const isEditMode = !!name;
 
@@ -28,7 +28,7 @@ export const ServiceFormPage = () => {
         service_category: service.service_category || ''
       });
     }
-  }, [isEditMode, location.state, name]); // Добавлен name в зависимости
+  }, [isEditMode, location.state, name]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -98,7 +98,7 @@ export const ServiceFormPage = () => {
   };
 
   const handleCancel = () => {
-    navigate('/admin/services'); // Изменен путь навигации
+    navigate('/admin/services');
   };
 
   return (

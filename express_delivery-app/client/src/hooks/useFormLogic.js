@@ -1,13 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
 
-/**
- * Универсальный hook для логики форм
- * Управляет: состояние, валидация, маски, обработчики
- * 
- * @param {Object} config - конфиг полей
- * @param {Function} onSubmit - функция отправки данных
- * @param {Object} initialValues - начальные значения (опционально)
- */
 export const useFormLogic = (config, onSubmit, initialValues = {}) => {
   // Создаём начальное состояние на основе конфига
   const initialForm = useMemo(() => {

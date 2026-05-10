@@ -1,0 +1,242 @@
+.searchSection {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: rgba(0, 123, 255, 0.04);
+  border: 1px solid rgba(0, 123, 255, 0.1);
+  border-radius: 12px;
+}
+
+.searchStats {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.actsList {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.actCard {
+  border: 1px solid rgba(0, 123, 255, 0.14);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 4px 16px rgba(14, 30, 37, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.actCard:hover {
+  box-shadow: 0 8px 24px rgba(14, 30, 37, 0.08);
+}
+
+.actHeader {
+  padding: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.15s ease;
+}
+
+.actHeader:hover {
+  background-color: rgba(0, 123, 255, 0.03);
+}
+
+.actHeaderInfo {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.actStat {
+  min-width: 120px;
+}
+
+.actStatLabel {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.6;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.actStatValue {
+  font-size: 18px;
+  font-weight: bold;
+  color: var(--text-h);
+}
+
+.actStatText {
+  color: var(--text);
+}
+
+.statWarning {
+  color: #42a5f5;
+}
+
+.statSuccess {
+  color: #66bb6a;
+}
+
+.expandIcon {
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.5;
+  transition: transform 0.2s ease;
+}
+
+.expandIconRotated {
+  transform: rotate(90deg);
+}
+
+.actContent {
+  border-top: 1px solid rgba(0, 123, 255, 0.1);
+  padding: 20px;
+  background: rgba(0, 123, 255, 0.02);
+}
+
+.actEmployees {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.employeeLabel {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.6;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.employeeName {
+  font-weight: bold;
+  color: var(--text-h);
+}
+
+.shipmentsTitle {
+  margin-bottom: 15px;
+  color: var(--text-h);
+  font-size: 16px;
+}
+
+.tableWrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 123, 255, 0.14);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.th {
+  border-bottom: 1px solid rgba(0, 123, 255, 0.16);
+  padding: 10px 14px;
+  text-align: left;
+  background-color: rgba(0, 123, 255, 0.06);
+  font-weight: 700;
+  color: var(--text-h);
+  white-space: nowrap;
+}
+
+.td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 123, 255, 0.06);
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.tdBold {
+  font-weight: bold;
+}
+
+.tr {
+  transition: background-color 0.15s ease;
+}
+
+.tr:nth-child(even) {
+  background-color: rgba(0, 123, 255, 0.02);
+}
+
+.tr:hover {
+  background-color: rgba(0, 123, 255, 0.06);
+}
+
+.trInTransit {
+  background-color: rgba(33, 150, 243, 0.06);
+}
+
+.trInTransit:hover {
+  background-color: rgba(33, 150, 243, 0.1);
+}
+
+.statusWaiting {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 5px;
+}
+
+.noShipments {
+  padding: 20px;
+  text-align: center;
+  color: var(--text);
+  opacity: 0.5;
+  background: rgba(0, 123, 255, 0.03);
+  border-radius: 8px;
+}
+
+.actActions {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 123, 255, 0.1);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.emptyState {
+  padding: 40px;
+  text-align: center;
+  background: rgba(255, 152, 0, 0.08);
+  border: 1px solid rgba(255, 152, 0, 0.15);
+  border-radius: 12px;
+  color: #ff9800;
+  font-size: 15px;
+}
+
+.footerStats {
+  margin-top: 20px;
+  padding: 16px 20px;
+  background: rgba(0, 123, 255, 0.04);
+  border: 1px solid rgba(0, 123, 255, 0.1);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--text);
+  opacity: 0.8;
+}
+
+.footerStats strong {
+  color: var(--text-h);
+}
+
+.footerStatActive {
+  color: #42a5f5 !important;
+}
+
+.footerStatCompleted {
+  color: #66bb6a !important;
+}

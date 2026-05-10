@@ -1,7 +1,30 @@
 import axios from 'axios';
 
-// клиент API
 const api = axios.create({ baseURL: '/api' });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('accessToken');
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+    }
+    return Promise.reject(error);
+  }
+);
+
+export const login = (data) => api.post('/auth/login', data);
+export const refreshToken = (data) => api.post('/auth/refresh', data);
+export const getMe = () => api.get('/auth/me');
 
 // клиенты
 export const getClients = () => api.get('/clients');
@@ -11,7 +34,7 @@ export const deleteClient = (passportNumber) => api.delete(`/clients/${passportN
 
 // сотрудники
 export const getEmployees = () => api.get('/employees');
-export const createEmployee = (data) => api.post('/employees', data);
+export const createEmployee = (data) => api.post('/employees', data).then(res => res.data);
 export const updateEmployee = (staffNumber, data) => api.put(`/employees/${staffNumber}`, data);
 export const deleteEmployee = (staffNumber) => api.delete(`/employees/${staffNumber}`);
 

@@ -11,18 +11,15 @@ import { createTariff, updateTariff } from '../../api/axios';
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
   
-  // Если дата в формате DD.MM.YYYY (из БД или локали)
   if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateString)) {
     const [day, month, year] = dateString.split('.');
     return `${year}-${month}-${day}`;
   }
   
-  // Если дата уже в формате YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    return dateString.split('T')[0]; // Убираем время если есть
+    return dateString.split('T')[0];
   }
   
-  // Пробуем распарсить как обычную дату
   const date = new Date(dateString);
   if (!isNaN(date.getTime())) {
     const year = date.getFullYear();

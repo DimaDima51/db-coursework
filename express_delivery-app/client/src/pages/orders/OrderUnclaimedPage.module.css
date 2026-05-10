@@ -1,0 +1,189 @@
+.tableSection {
+  margin-bottom: 30px;
+}
+
+.tableTitle {
+  margin-bottom: 15px;
+  color: var(--text-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  box-shadow: 0 20px 40px rgba(14, 30, 37, 0.08);
+  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid rgba(0, 123, 255, 0.14);
+  margin-top: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  min-width: 720px;
+}
+
+.th {
+  border: 1px solid rgba(0, 123, 255, 0.16);
+  padding: 14px 18px;
+  text-align: left;
+  background-color: rgba(0, 123, 255, 0.08);
+  font-weight: 700;
+  color: var(--text-h);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.thCenter {
+  text-align: center;
+}
+
+.td {
+  border: 1px solid rgba(0, 123, 255, 0.16);
+  padding: 14px 18px;
+  color: var(--text);
+  vertical-align: middle;
+}
+
+.tdBold {
+  font-weight: bold;
+}
+
+.tdCenter {
+  text-align: center;
+}
+
+.tr:nth-child(even) {
+  background-color: rgba(0, 123, 255, 0.04);
+}
+
+.tr:hover {
+  background-color: rgba(0, 123, 255, 0.12);
+  transition: background-color 0.2s ease;
+}
+
+.tr.overdue {
+  background-color: rgba(244, 67, 54, 0.08);
+}
+
+.tr.overdue:nth-child(even) {
+  background-color: rgba(244, 67, 54, 0.12);
+}
+
+.tr.overdue:hover {
+  background-color: rgba(244, 67, 54, 0.16);
+}
+
+.daysNormal {
+  color: var(--text);
+}
+
+.daysOverdue {
+  color: #ef5350;
+  font-weight: bold;
+}
+
+.overdueBadge {
+  display: block;
+  font-size: 11px;
+  color: #ef5350;
+  margin-top: 2px;
+  font-weight: normal;
+}
+
+.statsGrid {
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.statCard {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+
+.statCardWarning {
+  background: rgba(255, 152, 0, 0.1);
+  border: 1px solid rgba(255, 152, 0, 0.2);
+}
+
+.statCardMuted {
+  background: rgba(158, 158, 158, 0.15);
+  border: 1px solid rgba(158, 158, 158, 0.25);
+}
+
+.statCardInfo {
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.7;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: 36px;
+  font-weight: bold;
+}
+
+.statValueWarning {
+  color: #ff9800;
+}
+
+.statValueMuted {
+  color: #9e9e9e;
+}
+
+.statValueInfo {
+  color: #42a5f5;
+}
+
+.infoBox {
+  margin-bottom: 20px;
+  padding: 15px 20px;
+  background: rgba(33, 150, 243, 0.1);
+  border: 1px solid rgba(33, 150, 243, 0.2);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #90caf9;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.infoIcon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.emptyState {
+  padding: 50px;
+  text-align: center;
+  background: rgba(0, 123, 255, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(0, 123, 255, 0.14);
+}
+
+.emptyTitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: var(--text-h);
+  margin-bottom: 10px;
+}
+
+.emptyState p {
+  color: var(--text);
+  opacity: 0.7;
+}

@@ -1,5 +1,6 @@
 import express from 'express';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Создать новую услугу
-router.post('/', async (req, res) => {
+router.post('/', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const { service_name, service_category } = req.body;
 
@@ -38,7 +39,6 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    // Обработка дубликата PRIMARY KEY
     if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({
         message: 'Услуга с таким названием уже существует'
@@ -50,7 +50,7 @@ router.post('/', async (req, res) => {
 });
 
 // Обновить услугу
-router.put('/:service_name', async (req, res) => {
+router.put('/:service_name', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const { service_name } = req.params;
     const { service_category, new_service_name } = req.body;
@@ -81,8 +81,7 @@ router.put('/:service_name', async (req, res) => {
   }
 });
 
-// Удалить услугу
-router.delete('/:service_name', async (req, res) => {
+router.delete('/:service_name', requireRole(['Системный администратор']), async (req, res) => {
   try {
     const { service_name } = req.params;
 
@@ -99,7 +98,6 @@ router.delete('/:service_name', async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    // Обработка внешних ключей (если услуга используется в других таблицах)
     if (err.code === 'ER_ROW_IS_REFERENCED_2') {
       return res.status(409).json({
         message: 'Невозможно удалить услугу, так как она используется в других записях'

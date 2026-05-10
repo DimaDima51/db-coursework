@@ -7,7 +7,9 @@ const pool = mysql.createPool({
   database: 'express_delivery',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+   dateStrings: true,
+  timezone: '+00:00'
 });
 
 export default pool;

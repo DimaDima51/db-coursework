@@ -8,6 +8,7 @@ import { Loader } from '../../components/ui/Loader/Loader';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createTransferAct, getEmployees, getShipments } from '../../api/axios';
+import tableStyles from './TransferActFormPage.module.css';
 
 const STATUS_COLORS = {
   'Принято': '#4CAF50',
@@ -19,7 +20,7 @@ const STATUS_COLORS = {
   'Утилизирована': '#9E9E9E'
 };
 
-const getStatusColor = (status) => statusColors[status] || '#999';
+const getStatusColor = (status) => STATUS_COLORS[status] || '#999';
 
 export const TransferActFormPage = () => {
   const navigate = useNavigate();
@@ -38,7 +39,6 @@ export const TransferActFormPage = () => {
     receiver_staff_number: ''
   });
 
-  // Фильтруем посылки: показываем все активные, но помечаем полученные
   const availableShipments = useMemo(() => {
     return shipments.filter(s => 
       s.shipment_status !== 'Выдана' && 
@@ -47,12 +47,10 @@ export const TransferActFormPage = () => {
     );
   }, [shipments]);
 
-  // Посылки, которые можно добавить в акт (не полученные)
   const addableShipments = useMemo(() => {
     return availableShipments.filter(s => s.shipment_status !== 'Получено');
   }, [availableShipments]);
 
-  // Проверяем, все ли посылки в выбранных имеют статус "Получено"
   const allSelectedReceived = useMemo(() => {
     if (selectedShipments.size === 0) return false;
     return Array.from(selectedShipments).every(ipo => {
@@ -61,7 +59,6 @@ export const TransferActFormPage = () => {
     });
   }, [selectedShipments, shipments]);
 
-  // Количество полученных посылок в выбранных
   const receivedCount = useMemo(() => {
     return Array.from(selectedShipments).filter(ipo => {
       const shipment = shipments.find(s => s.ipo === ipo);
@@ -69,7 +66,6 @@ export const TransferActFormPage = () => {
     }).length;
   }, [selectedShipments, shipments]);
 
-  // Transform data for Select components
   const employeeOptions = useMemo(() => 
     employees.map(emp => ({
       value: emp.staff_number,
@@ -77,7 +73,6 @@ export const TransferActFormPage = () => {
     })), [employees]
   );
 
-  // Load data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -86,7 +81,6 @@ export const TransferActFormPage = () => {
           getEmployees(),
           getShipments()
         ]);
-
         setEmployees(employeesRes.data || []);
         setShipments(shipmentsRes.data || []);
       } catch (err) {
@@ -99,7 +93,6 @@ export const TransferActFormPage = () => {
     loadData();
   }, []);
 
-  // Generate act number if not set
   useEffect(() => {
     if (!form.act_number) {
       const timestamp = Math.floor(Date.now() / 1000);
@@ -109,49 +102,23 @@ export const TransferActFormPage = () => {
 
   const validateForm = () => {
     const newErrors = {};
-
-    if (!form.act_number.trim()) {
-      newErrors.act_number = 'Номер акта обязателен';
-    }
-
-    if (!form.sender_staff_number) {
-      newErrors.sender_staff_number = 'Отправляющий сотрудник обязателен';
-    }
-
-    if (!form.receiver_staff_number) {
-      newErrors.receiver_staff_number = 'Принимающий сотрудник обязателен';
-    }
-
+    if (!form.act_number.trim()) newErrors.act_number = 'Номер акта обязателен';
+    if (!form.sender_staff_number) newErrors.sender_staff_number = 'Отправляющий сотрудник обязателен';
+    if (!form.receiver_staff_number) newErrors.receiver_staff_number = 'Принимающий сотрудник обязателен';
     if (form.sender_staff_number === form.receiver_staff_number) {
       newErrors.receiver_staff_number = 'Отправляющий и принимающий сотрудники должны быть разными';
     }
-
-    if (selectedShipments.size === 0) {
-      newErrors.shipments = 'Выберите хотя бы одну посылку';
-    }
-
-    // Не даем создать акт, если все посылки уже получены
-    if (allSelectedReceived) {
-      newErrors.shipments = 'Все выбранные посылки уже получены. Акт можно закрыть.';
-    }
-
+    if (selectedShipments.size === 0) newErrors.shipments = 'Выберите хотя бы одну посылку';
+    if (allSelectedReceived) newErrors.shipments = 'Все выбранные посылки уже получены. Акт можно закрыть.';
     return newErrors;
   };
 
   const handleShipmentSelect = useCallback((ipo) => {
     const shipment = shipments.find(s => s.ipo === ipo);
-    // Разрешаем выбор только если посылка не получена
-    if (shipment?.shipment_status === 'Получено') {
-      return;
-    }
-
+    if (shipment?.shipment_status === 'Получено') return;
     setSelectedShipments(prev => {
       const newSelected = new Set(prev);
-      if (newSelected.has(ipo)) {
-        newSelected.delete(ipo);
-      } else {
-        newSelected.add(ipo);
-      }
+      newSelected.has(ipo) ? newSelected.delete(ipo) : newSelected.add(ipo);
       return newSelected;
     });
   }, [shipments]);
@@ -160,8 +127,7 @@ export const TransferActFormPage = () => {
     if (selectedShipments.size === addableShipments.length) {
       setSelectedShipments(new Set());
     } else {
-      const all = new Set(addableShipments.map(s => s.ipo));
-      setSelectedShipments(all);
+      setSelectedShipments(new Set(addableShipments.map(s => s.ipo)));
     }
   }, [selectedShipments.size, addableShipments]);
 
@@ -170,22 +136,11 @@ export const TransferActFormPage = () => {
       alert('Не все посылки в акте получены');
       return;
     }
-
-    if (!confirm('Закрыть акт? Все посылки в нем уже получены.')) {
-      return;
-    }
-
+    if (!confirm('Закрыть акт? Все посылки в нем уже получены.')) return;
     setLoading(true);
     try {
-      // Здесь логика закрытия акта - например, изменение статуса или архивация
-      // await closeTransferAct(form.act_number);
-      
-      // Очищаем выбранные посылки
       setSelectedShipments(new Set());
-      
-      // Обновляем список посылок, исключая полученные
       setShipments(prev => prev.filter(s => s.shipment_status !== 'Получено'));
-      
       alert('Акт закрыт успешно');
     } catch (err) {
       console.error('Ошибка при закрытии акта:', err);
@@ -193,7 +148,7 @@ export const TransferActFormPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [allSelectedReceived, form.act_number]);
+  }, [allSelectedReceived]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -202,7 +157,6 @@ export const TransferActFormPage = () => {
       setErrors(newErrors);
       return;
     }
-
     setLoading(true);
     try {
       const payload = {
@@ -212,7 +166,6 @@ export const TransferActFormPage = () => {
         receiver_staff_number: parseInt(form.receiver_staff_number),
         shipment_ipos: Array.from(selectedShipments)
       };
-
       await createTransferAct(payload);
       alert('Акт доставки успешно создан');
       navigate('/orders/transfer-acts');
@@ -228,9 +181,7 @@ export const TransferActFormPage = () => {
     }
   };
 
-  const handleCancel = () => {
-    navigate('/orders/transfer-acts');
-  };
+  const handleCancel = () => navigate('/orders/transfer-acts');
 
   if (dataLoading) {
     return (
@@ -255,7 +206,6 @@ export const TransferActFormPage = () => {
 
         <div className={styles.formContainer}>
           <form onSubmit={handleSubmit} className={styles.form} noValidate>
-            {/* Основная информация */}
             <div className={styles.formSection}>
               <h2 className={styles.sectionTitle}>Информация об акте</h2>
               <div className={styles.formGrid}>
@@ -281,7 +231,6 @@ export const TransferActFormPage = () => {
               </div>
             </div>
 
-            {/* Сотрудники */}
             <div className={styles.formSection}>
               <h2 className={styles.sectionTitle}>Участники перемещения</h2>
               <div className={styles.formGrid}>
@@ -308,23 +257,16 @@ export const TransferActFormPage = () => {
               </div>
             </div>
 
-            {/* Выбор посылок */}
             <div className={styles.formSection}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div className={tableStyles.sectionHeader}>
                 <h2 className={styles.sectionTitle}>Выбор посылок для перемещения</h2>
-                
-                {/* Кнопка закрытия акта */}
                 {allSelectedReceived && (
                   <Button
                     type="button"
                     variant="secondary"
                     onClick={handleCloseAct}
                     loading={loading}
-                    style={{ 
-                      backgroundColor: '#00BCD4',
-                      color: 'white',
-                      border: 'none'
-                    }}
+                    className={tableStyles.closeActButton}
                   >
                     Закрыть акт (все получено)
                   </Button>
@@ -332,52 +274,31 @@ export const TransferActFormPage = () => {
               </div>
               
               {errors.shipments && (
-                <div style={{ color: '#d32f2f', marginBottom: '15px' }}>
-                  {errors.shipments}
-                </div>
+                <div className={tableStyles.errorMessage}>{errors.shipments}</div>
               )}
 
-              {/* Статистика по выбранным */}
               {selectedShipments.size > 0 && (
-                <div style={{ 
-                  marginBottom: '15px', 
-                  padding: '10px', 
-                  backgroundColor: allSelectedReceived ? '#B2EBF2' : '#c8e6c9',
-                  borderRadius: '4px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}>
+                <div className={`${tableStyles.selectionStats} ${allSelectedReceived ? tableStyles.selectionStatsSuccess : tableStyles.selectionStatsInfo}`}>
                   <span>
                     Выбрано: <strong>{selectedShipments.size}</strong>
                     {receivedCount > 0 && (
-                      <span style={{ marginLeft: '10px', color: '#00BCD4' }}>
-                        (получено: {receivedCount})
-                      </span>
+                      <span className={tableStyles.receivedCount}> (получено: {receivedCount})</span>
                     )}
                   </span>
                   {allSelectedReceived && (
-                    <span style={{ color: '#00838F', fontWeight: 'bold' }}>
-                      ✓ Все посылки получены
-                    </span>
+                    <span className={tableStyles.allReceived}>✓ Все посылки получены</span>
                   )}
                 </div>
               )}
 
               {availableShipments.length === 0 ? (
-                <div style={{ 
-                  padding: '20px',
-                  backgroundColor: '#FFF3E0',
-                  borderRadius: '4px',
-                  color: '#E65100',
-                  textAlign: 'center'
-                }}>
+                <div className={tableStyles.emptyWarning}>
                   Нет доступных посылок для перемещения
                 </div>
               ) : (
                 <>
-                  <div style={{ marginBottom: '15px' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <div className={tableStyles.selectAllContainer}>
+                    <label className={tableStyles.selectAllLabel}>
                       <input
                         type="checkbox"
                         checked={selectedShipments.size === addableShipments.length && addableShipments.length > 0}
@@ -388,23 +309,15 @@ export const TransferActFormPage = () => {
                     </label>
                   </div>
 
-                  <div style={{
-                    maxHeight: '400px',
-                    overflowY: 'auto',
-                    border: '1px solid #ddd',
-                    borderRadius: '4px',
-                    backgroundColor: '#fafafa'
-                  }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <div className={tableStyles.tableWrapper}>
+                    <table className={tableStyles.table}>
                       <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '1px solid #ddd' }}>
-                          <th style={{ padding: '12px', textAlign: 'center', width: '40px', borderRight: '1px solid #ddd' }}>
-                            ☑
-                          </th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #ddd' }}>IPO</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #ddd' }}>Получатель</th>
-                          <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #ddd' }}>Тип</th>
-                          <th style={{ padding: '12px', textAlign: 'left' }}>Статус</th>
+                        <tr>
+                          <th className={`${tableStyles.th} ${tableStyles.thCheckbox}`}>☑</th>
+                          <th className={tableStyles.th}>IPO</th>
+                          <th className={tableStyles.th}>Получатель</th>
+                          <th className={tableStyles.th}>Тип</th>
+                          <th className={tableStyles.th}>Статус</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -415,19 +328,12 @@ export const TransferActFormPage = () => {
                           return (
                             <tr 
                               key={shipment.ipo}
-                              style={{
-                                borderBottom: '1px solid #eee',
-                                backgroundColor: isSelected 
-                                  ? (isReceived ? '#E0F7FA' : '#e3f2fd') 
-                                  : (isReceived ? '#FFF8E1' : 'transparent'),
-                                cursor: isReceived ? 'not-allowed' : 'pointer',
-                                opacity: isReceived ? 0.7 : 1
-                              }}
+                              className={`${tableStyles.tr} ${isReceived ? tableStyles.trReceived : ''} ${isSelected ? tableStyles.trSelected : ''}`}
                               onClick={() => !isReceived && handleShipmentSelect(shipment.ipo)}
                             >
-                              <td style={{ padding: '12px', textAlign: 'center', borderRight: '1px solid #eee' }}>
+                              <td className={`${tableStyles.td} ${tableStyles.tdCenter}`}>
                                 {isReceived ? (
-                                  <span style={{ color: '#00BCD4' }}>✓</span>
+                                  <span className={tableStyles.receivedIcon}>✓</span>
                                 ) : (
                                   <input
                                     type="checkbox"
@@ -437,26 +343,12 @@ export const TransferActFormPage = () => {
                                   />
                                 )}
                               </td>
-                              <td style={{ padding: '12px', borderRight: '1px solid #eee', fontWeight: 'bold' }}>
-                                {shipment.ipo}
-                              </td>
-                              <td style={{ padding: '12px', borderRight: '1px solid #eee' }}>
-                                {shipment.receiver_passport_number}
-                              </td>
-                              <td style={{ padding: '12px', borderRight: '1px solid #eee' }}>
-                                {shipment.package_type}
-                              </td>
-                              <td style={{ 
-                                padding: '12px', 
-                                fontWeight: 'bold', 
-                                color: getStatusColor(shipment.shipment_status)
-                              }}>
+                              <td className={`${tableStyles.td} ${tableStyles.tdBold}`}>{shipment.ipo}</td>
+                              <td className={tableStyles.td}>{shipment.receiver_passport_number || '-'}</td>
+                              <td className={tableStyles.td}>{shipment.package_type || '-'}</td>
+                              <td className={tableStyles.td} style={{ color: getStatusColor(shipment.shipment_status), fontWeight: 'bold' }}>
                                 {shipment.shipment_status}
-                                {isReceived && (
-                                  <span style={{ fontSize: '11px', marginLeft: '5px', color: '#666' }}>
-                                    (получена)
-                                  </span>
-                                )}
+                                {isReceived && <span className={tableStyles.statusNote}>(получена)</span>}
                               </td>
                             </tr>
                           );
@@ -468,11 +360,7 @@ export const TransferActFormPage = () => {
               )}
             </div>
 
-            {errors.submit && (
-              <div className={styles.errorBlock}>
-                {errors.submit}
-              </div>
-            )}
+            {errors.submit && <div className={styles.errorBlock}>{errors.submit}</div>}
 
             <div className={styles.buttonGroup}>
               <Button 
@@ -494,6 +382,3 @@ export const TransferActFormPage = () => {
     </div>
   );
 };
-
-// Добавляем недостающий объект
-const statusColors = STATUS_COLORS;

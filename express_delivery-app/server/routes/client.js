@@ -1,7 +1,9 @@
 import express from 'express';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта']));
 
 router.get('/', async (req, res) => {
   try {

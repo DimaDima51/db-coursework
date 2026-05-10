@@ -1,11 +1,33 @@
 import express from 'express';
+import bcrypt from 'bcrypt';
 import pool from '../db.js';
+import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
+router.use(requireRole(['Системный администратор', 'Администратор']));
+
+// Функция генерации случайного шестизначного пароля из букв
+const generatePassword = () => {
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+  let password = '';
+  for (let i = 0; i < 6; i++) {
+    password += letters.charAt(Math.floor(Math.random() * letters.length));
+  }
+  return password;
+};
 
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM employee');
+    const { position_name, pickup_point_index } = req.user;
+    const [rows] = position_name === 'Системный администратор'
+      ? await pool.query(
+          'SELECT staff_number, surname, first_name, patronymic, pickup_point_index, position_name, allowance, note FROM employee'
+        )
+      : await pool.query(
+          'SELECT staff_number, surname, first_name, patronymic, pickup_point_index, position_name, allowance, note FROM employee WHERE pickup_point_index = ?',
+          [pickup_point_index]
+        );
+
     res.json(rows);
   } catch (err) {
     console.error(err.message);
@@ -26,20 +48,25 @@ router.post('/', async (req, res) => {
       note
     } = req.body;
 
+    // Генерируем случайный шестизначный пароль из букв
+    const generatedPassword = generatePassword();
+    const password_hash = await bcrypt.hash(generatedPassword, 10);
+
     const [result] = await pool.query(
       `INSERT INTO employee (
         staff_number, surname, first_name, patronymic,
-        pickup_point_index, position_name, allowance, note
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        pickup_point_index, position_name, allowance, note, password_hash
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         staff_number, surname, first_name, patronymic,
-        pickup_point_index, position_name, allowance, note
+        pickup_point_index, position_name, allowance, note, password_hash
       ]
     );
 
     res.status(201).json({
       message: 'Сотрудник успешно создан',
-      id: result.insertId
+      id: result.insertId,
+      generatedPassword: generatedPassword
     });
   } catch (err) {
     console.error(err.message);
@@ -57,19 +84,34 @@ router.put('/:staff_number', async (req, res) => {
       pickup_point_index,
       position_name,
       allowance,
-      note
+      note,
+      password
     } = req.body;
 
-    const [result] = await pool.query(
-      `UPDATE employee SET
-        surname = ?, first_name = ?, patronymic = ?,
-        pickup_point_index = ?, position_name = ?, allowance = ?, note = ?
-      WHERE staff_number = ?`,
-      [
-        surname, first_name, patronymic,
-        pickup_point_index, position_name, allowance, note, staff_number
-      ]
-    );
+    const updates = [
+      surname,
+      first_name,
+      patronymic,
+      pickup_point_index,
+      position_name,
+      allowance,
+      note
+    ];
+
+    let query = `UPDATE employee SET
+      surname = ?, first_name = ?, patronymic = ?,
+      pickup_point_index = ?, position_name = ?, allowance = ?, note = ?`;
+
+    if (password) {
+      const password_hash = await bcrypt.hash(password, 10);
+      query += ', password_hash = ?';
+      updates.push(password_hash);
+    }
+
+    query += ' WHERE staff_number = ?';
+    updates.push(staff_number);
+
+    const [result] = await pool.query(query, updates);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Сотрудник не найден' });

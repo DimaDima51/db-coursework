@@ -47,9 +47,8 @@
 }
 
 .navItem {
-  /* Сбрасываем дефолты */
   background: none;
-  border: 1px solid transparent; /* Резервируем место под границу, чтобы не дергалось */
+  border: 1px solid transparent;
   
   color: var(--text);
   text-decoration: none;
@@ -68,9 +67,42 @@
   transition: all 0.2s ease;
 }
 
-/* Вот тут магия обводки и фона */
 .navItem:hover, .navItemActive {
   background: var(--accent-bg);
   color: var(--accent);
-  border: 1px solid var(--accent-border); /* Та самая обводка из твоих переменных */
+  border: 1px solid var(--accent-border);
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userName {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.logoutButton {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  
+  padding: 6px 12px;
+  border-radius: 6px;
+  
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logoutButton:hover {
+  background: var(--error-bg);
+  border-color: var(--error);
+  color: var(--error);
 }

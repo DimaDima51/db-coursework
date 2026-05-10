@@ -1,10 +1,13 @@
 import "./App.css";
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthProvider';
+import { RequireAuth } from './auth/RequireAuth';
 import { HomePage } from './pages/HomePage';
 import { ClientsPage } from './pages/clients/ClientsPage';
 import { ClientFormPage } from './pages/clients/ClientFormPage';
 import { EmployeesPage } from './pages/employees/EmployeesPage';
 import { EmployeesFormPage } from './pages/employees/EmployeesFormPage';
+import { LoginPage } from './pages/LoginPage';
 
 // Отправления
 import { OrderCreatePage } from './pages/orders/OrderCreatePage';
@@ -17,8 +20,9 @@ import { TransferActFormPage } from './pages/orders/TransferActFormPage';
 // Отчёты
 import { MovementReportPage } from './pages/reports/MovementReportPage';
 import { FinanceReportPage } from './pages/reports/FinanceReportPage';
-import { AnalyticsReportPage } from './pages/reports/AnalyticsReportPage';
-import { PrintFormsPage } from './pages/reports/PrintFormsPage';
+import { ActReportPage } from './pages/reports/ActReportPage';
+import { ClientsReportPage } from './pages/reports/ClientsReportPage';
+import { AnalyticReportPage } from './pages/reports/AnalyticReportPage';
 
 // Администрирование
 import { PickupPointsPage } from './pages/admin/PickupPointsPage';
@@ -30,52 +34,249 @@ import { ServiceFormPage } from './pages/admin/ServiceFormPage';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Главная */}
-        <Route path="/" element={<HomePage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-        {/* Клиенты */}
-        <Route path="/clients" element={<ClientsPage />} />
-        <Route path="/clients/new" element={<ClientFormPage />} />
-        <Route path="/clients/create" element={<ClientFormPage />} />
-        <Route path="/clients/edit/:passport_number" element={<ClientFormPage />} />
+          <Route element={<RequireAuth />}>
+            <Route path="/" element={<HomePage />} />
 
-        {/* Сотрудники */}
-        <Route path="/employees" element={<EmployeesPage />} />
-        <Route path="/employees/new" element={<EmployeesFormPage />} />
-        <Route path="/employees/create" element={<EmployeesFormPage />} />
-        <Route path="/employees/edit/:staff_number" element={<EmployeesFormPage />} />
+            <Route
+              path="/clients"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <ClientsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/clients/new"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <ClientFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/clients/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <ClientFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/clients/edit/:passport_number"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <ClientFormPage />
+                </RequireAuth>
+              }
+            />
 
-        {/* Отправления */}
-        <Route path="/orders" element={<OrderListPage />} />
-        <Route path="/orders/create" element={<OrderCreatePage />} />
-        <Route path="/orders/issue" element={<OrderIssuePage />} />
-        <Route path="/orders/unclaimed" element={<OrderUnclaimedPage />} />
-        <Route path="/orders/transfer-acts" element={<TransferActsPage />} />
-        <Route path="/orders/transfer-acts/create" element={<TransferActFormPage />} />
+            <Route
+              path="/employees"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <EmployeesPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/employees/new"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <EmployeesFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/employees/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <EmployeesFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/employees/edit/:staff_number"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <EmployeesFormPage />
+                </RequireAuth>
+              }
+            />
 
-        {/* Отчёты */}
-        <Route path="/reports/movement" element={<MovementReportPage />} />
-        <Route path="/reports/finance" element={<FinanceReportPage />} />
-        <Route path="/reports/analytics" element={<AnalyticsReportPage />} />
-        <Route path="/reports/print-forms" element={<PrintFormsPage />} />
+            <Route
+              path="/orders"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор', 'Курьер']}>
+                  <OrderListPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/orders/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <OrderCreatePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/orders/issue"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <OrderIssuePage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/orders/unclaimed"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <OrderUnclaimedPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/orders/transfer-acts"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор', 'Курьер']}>
+                  <TransferActsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/orders/transfer-acts/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <TransferActFormPage />
+                </RequireAuth>
+              }
+            />
 
-        {/* Администрирование */}
-        <Route path="/admin/pickup-points" element={<PickupPointsPage />} />
-        <Route path="/admin/pickup-points/create" element={<PickupPointFormPage />} />
-        <Route path="/admin/pickup-points/edit/:index" element={<PickupPointFormPage />} />
-        <Route path="/admin/tariffs" element={<TariffsPage />} />
-        <Route path="/admin/tariffs/create" element={<TariffFormPage />} />
-        <Route path="/admin/tariffs/edit/:code" element={<TariffFormPage />} />
-        <Route path="/admin/services" element={<ServicesPage />} />
-        <Route path="/admin/services/create" element={<ServiceFormPage />} />
-        <Route path="/admin/services/edit/:name" element={<ServiceFormPage />} />
+            <Route
+              path="/reports/movement"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <MovementReportPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/reports/act"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                  <ActReportPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/reports/finance"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <FinanceReportPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/reports/clients"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <ClientsReportPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/reports/analytic"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта']}>
+                  <AnalyticReportPage />
+                </RequireAuth>
+              }
+            />
 
-        {/* 404 */}
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+            <Route
+              path="/admin/pickup-points"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <PickupPointsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/pickup-points/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <PickupPointFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/pickup-points/edit/:index"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <PickupPointFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/tariffs"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <TariffsPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/tariffs/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <TariffFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/tariffs/edit/:code"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <TariffFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/services"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <ServicesPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/services/create"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <ServiceFormPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin/services/edit/:name"
+              element={
+                <RequireAuth allowedRoles={['Системный администратор']}>
+                  <ServiceFormPage />
+                </RequireAuth>
+              }
+            />
+          </Route>
+
+          {/* 404 */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

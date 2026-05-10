@@ -8,15 +8,16 @@ import { useAsyncData } from '../../hooks/useAsyncData';
 import { getTransferActs, getTransferAct, receiveTransferAct } from '../../api/axios';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import tableStyles from './TransferActsPage.module.css';
 
-const statusColors = {
+const STATUS_COLORS = {
   'В пути': '#2196F3',
   'Готова к выдаче': '#FF9800',
   'Получено': '#00BCD4',
   'Выдана': '#8BC34A'
 };
 
-const getStatusColor = (status) => statusColors[status] || '#999';
+const getStatusColor = (status) => STATUS_COLORS[status] || '#999';
 
 export const TransferActsPage = () => {
   const navigate = useNavigate();
@@ -28,85 +29,51 @@ export const TransferActsPage = () => {
 
   const { data, loading, error } = useAsyncData(async () => {
     const response = await getTransferActs();
-    console.log('Transfer acts response:', response.data);
     return response.data;
   }, []);
 
   const acts = data ?? [];
 
-  // Загружаем детали каждого акта (с посылками)
   useEffect(() => {
     const loadActDetails = async () => {
       if (!acts || acts.length === 0) {
         setActsWithShipments([]);
         return;
       }
-      
       setLoadingShipments(true);
       try {
         const actsWithDetails = await Promise.all(
           acts.map(async (act) => {
             try {
               const detailResponse = await getTransferAct(act.act_number);
-              console.log(`Act ${act.act_number} details:`, detailResponse.data);
-              
-              // Посылки могут быть в поле contents или shipments
               const shipments = detailResponse.data.contents || detailResponse.data.shipments || [];
-              
-              return {
-                ...act,
-                ...detailResponse.data,
-                shipments: shipments
-              };
+              return { ...act, ...detailResponse.data, shipments };
             } catch (err) {
               console.error(`Error loading act ${act.act_number}:`, err);
-              return {
-                ...act,
-                shipments: []
-              };
+              return { ...act, shipments: [] };
             }
           })
         );
-        
-        console.log('Acts with shipments:', actsWithDetails);
         setActsWithShipments(actsWithDetails);
       } catch (err) {
         console.error('Error loading act details:', err);
-        // Если не удалось загрузить детали, используем базовые данные
-        const basicActs = acts.map(act => ({
-          ...act,
-          shipments: act.contents || act.shipments || []
-        }));
-        setActsWithShipments(basicActs);
+        setActsWithShipments(acts.map(act => ({ ...act, shipments: act.contents || act.shipments || [] })));
       } finally {
         setLoadingShipments(false);
       }
     };
-
     loadActDetails();
   }, [acts]);
 
-  // Фильтруем акты: показываем только те, где есть посылки в статусе "В пути"
   const activeActs = useMemo(() => {
-    console.log('All acts with shipments:', actsWithShipments);
-    
     return actsWithShipments.filter(act => {
       const shipments = act.shipments || [];
-      console.log(`Act ${act.act_number} shipments:`, shipments);
-      
-      const hasInTransitShipments = shipments.some(
-        shipment => shipment.shipment_status === 'В пути'
-      );
-      
-      console.log(`Act ${act.act_number} hasInTransitShipments:`, hasInTransitShipments);
-      return hasInTransitShipments;
+      return shipments.some(shipment => shipment.shipment_status === 'В пути');
     });
   }, [actsWithShipments]);
 
-  // Фильтруем по поиску
   const filteredActs = useMemo(() => {
     if (!searchTerm) return activeActs;
-    
     const searchLower = searchTerm.toLowerCase();
     return activeActs.filter(act => {
       return (
@@ -117,18 +84,11 @@ export const TransferActsPage = () => {
     });
   }, [activeActs, searchTerm]);
 
-  // Считаем статистику по посылкам в акте
   const getActStats = (act) => {
     const shipments = act.shipments || [];
-    if (shipments.length === 0) {
-      return { total: 0, inTransit: 0 };
-    }
-    
+    if (shipments.length === 0) return { total: 0, inTransit: 0 };
     const inTransit = shipments.filter(s => s.shipment_status === 'В пути').length;
-    return {
-      total: shipments.length,
-      inTransit
-    };
+    return { total: shipments.length, inTransit };
   };
 
   const handleToggleExpand = (actNumber) => {
@@ -136,10 +96,7 @@ export const TransferActsPage = () => {
   };
 
   const handleReceiveAct = async (actNumber) => {
-    if (!confirm(`Подтвердить получение акта №${actNumber}? Статус посылок изменится.`)) {
-      return;
-    }
-
+    if (!confirm(`Подтвердить получение акта №${actNumber}? Статус посылок изменится.`)) return;
     setProcessingAct(actNumber);
     try {
       await receiveTransferAct(actNumber);
@@ -193,8 +150,7 @@ export const TransferActsPage = () => {
           </Button>
         </div>
 
-        {/* Search section */}
-        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f9f9f9', borderRadius: '4px' }}>
+        <div className={tableStyles.searchSection}>
           <Input
             label="Поиск по номеру акта или сотруднику"
             type="text"
@@ -202,22 +158,15 @@ export const TransferActsPage = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Введите номер акта или табельный номер..."
           />
-          <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+          <div className={tableStyles.searchStats}>
             Активных актов: <strong>{activeActs.length}</strong> | 
             Завершенных (скрыто): <strong>{actsWithShipments.length - activeActs.length}</strong>
           </div>
         </div>
 
-        {/* Acts list */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div className={tableStyles.actsList}>
           {filteredActs.length === 0 ? (
-            <div style={{
-              padding: '30px',
-              textAlign: 'center',
-              backgroundColor: '#FFF3E0',
-              borderRadius: '4px',
-              color: '#E65100'
-            }}>
+            <div className={tableStyles.emptyState}>
               {searchTerm 
                 ? 'По вашему запросу ничего не найдено' 
                 : 'Нет активных актов доставки (все посылки уже доставлены)'}
@@ -229,90 +178,48 @@ export const TransferActsPage = () => {
               const shipments = act.shipments || [];
               
               return (
-                <div 
-                  key={act.act_number}
-                  style={{
-                    border: '1px solid #ddd',
-                    borderRadius: '8px',
-                    backgroundColor: '#fff',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                  }}
-                >
-                  {/* Act header */}
+                <div key={act.act_number} className={tableStyles.actCard}>
                   <div 
                     onClick={() => handleToggleExpand(act.act_number)}
-                    style={{
-                      padding: '20px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
+                    className={tableStyles.actHeader}
                   >
-                    <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                          Акт №
-                        </div>
-                        <div style={{ fontSize: '18px', fontWeight: 'bold' }}>
-                          {act.act_number}
-                        </div>
+                    <div className={tableStyles.actHeaderInfo}>
+                      <div className={tableStyles.actStat}>
+                        <div className={tableStyles.actStatLabel}>Акт №</div>
+                        <div className={tableStyles.actStatValue}>{act.act_number}</div>
                       </div>
-                      
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                          Дата создания
-                        </div>
-                        <div>
+                      <div className={tableStyles.actStat}>
+                        <div className={tableStyles.actStatLabel}>Дата создания</div>
+                        <div className={tableStyles.actStatText}>
                           {act.creation_date ? new Date(act.creation_date).toLocaleDateString('ru-RU') : '-'}
                         </div>
                       </div>
-
-                      <div>
-                        <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                          Посылок в пути
-                        </div>
-                        <div style={{ 
-                          fontSize: '18px',
-                          fontWeight: 'bold',
-                          color: stats.inTransit > 0 ? '#2196F3' : '#4CAF50'
-                        }}>
+                      <div className={tableStyles.actStat}>
+                        <div className={tableStyles.actStatLabel}>Посылок в пути</div>
+                        <div className={`${tableStyles.actStatValue} ${stats.inTransit > 0 ? tableStyles.statWarning : tableStyles.statSuccess}`}>
                           {stats.inTransit} / {stats.total}
                         </div>
                       </div>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                      <span style={{ fontSize: '20px', color: '#666' }}>
-                        {isExpanded ? '▼' : '▶'}
-                      </span>
-                    </div>
+                    <span className={`${tableStyles.expandIcon} ${isExpanded ? tableStyles.expandIconRotated : ''}`}>
+                      ▶
+                    </span>
                   </div>
 
-                  {/* Expanded content */}
                   {isExpanded && (
-                    <div style={{ 
-                      borderTop: '1px solid #eee',
-                      padding: '20px',
-                      backgroundColor: '#fafafa'
-                    }}>
-                      {/* Сотрудники */}
-                      <div style={{ marginBottom: '20px', display: 'flex', gap: '30px' }}>
+                    <div className={tableStyles.actContent}>
+                      <div className={tableStyles.actEmployees}>
                         <div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                            Отправляющий сотрудник
-                          </div>
-                          <div style={{ fontWeight: 'bold' }}>
+                          <div className={tableStyles.employeeLabel}>Отправляющий сотрудник</div>
+                          <div className={tableStyles.employeeName}>
                             {act.sender_surname && act.sender_first_name 
                               ? `${act.sender_surname} ${act.sender_first_name} (№${act.sender_staff_number})`
                               : `Сотрудник №${act.sender_staff_number}`}
                           </div>
                         </div>
                         <div>
-                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                            Принимающий сотрудник
-                          </div>
-                          <div style={{ fontWeight: 'bold' }}>
+                          <div className={tableStyles.employeeLabel}>Принимающий сотрудник</div>
+                          <div className={tableStyles.employeeName}>
                             {act.receiver_surname && act.receiver_first_name 
                               ? `${act.receiver_surname} ${act.receiver_first_name} (№${act.receiver_staff_number})`
                               : `Сотрудник №${act.receiver_staff_number}`}
@@ -320,34 +227,19 @@ export const TransferActsPage = () => {
                         </div>
                       </div>
 
-                      {/* Посылки */}
-                      <h3 style={{ marginBottom: '15px' }}>
+                      <h3 className={tableStyles.shipmentsTitle}>
                         Посылки в акте ({stats.inTransit} в пути из {stats.total})
                       </h3>
                       
                       {shipments.length > 0 ? (
-                        <div style={{
-                          maxHeight: '300px',
-                          overflowY: 'auto',
-                          border: '1px solid #ddd',
-                          borderRadius: '4px',
-                          backgroundColor: '#fff'
-                        }}>
-                          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <div className={tableStyles.tableWrapper}>
+                          <table className={tableStyles.table}>
                             <thead>
-                              <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '1px solid #ddd' }}>
-                                <th style={{ padding: '10px', textAlign: 'left', borderRight: '1px solid #ddd' }}>
-                                  IPO
-                                </th>
-                                <th style={{ padding: '10px', textAlign: 'left', borderRight: '1px solid #ddd' }}>
-                                  Тип
-                                </th>
-                                <th style={{ padding: '10px', textAlign: 'left', borderRight: '1px solid #ddd' }}>
-                                  Вес (кг)
-                                </th>
-                                <th style={{ padding: '10px', textAlign: 'left' }}>
-                                  Статус
-                                </th>
+                              <tr>
+                                <th className={tableStyles.th}>IPO</th>
+                                <th className={tableStyles.th}>Тип</th>
+                                <th className={tableStyles.th}>Вес (кг)</th>
+                                <th className={tableStyles.th}>Статус</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -356,31 +248,14 @@ export const TransferActsPage = () => {
                                 return (
                                   <tr 
                                     key={shipment.ipo}
-                                    style={{
-                                      borderBottom: '1px solid #eee',
-                                      backgroundColor: isInTransit ? '#E3F2FD' : 'transparent'
-                                    }}
+                                    className={`${tableStyles.tr} ${isInTransit ? tableStyles.trInTransit : ''}`}
                                   >
-                                    <td style={{ padding: '10px', borderRight: '1px solid #eee', fontWeight: 'bold' }}>
-                                      {shipment.ipo}
-                                    </td>
-                                    <td style={{ padding: '10px', borderRight: '1px solid #eee' }}>
-                                      {shipment.package_type}
-                                    </td>
-                                    <td style={{ padding: '10px', borderRight: '1px solid #eee' }}>
-                                      {shipment.actual_weight}
-                                    </td>
-                                    <td style={{ 
-                                      padding: '10px',
-                                      fontWeight: 'bold',
-                                      color: getStatusColor(shipment.shipment_status)
-                                    }}>
+                                    <td className={`${tableStyles.td} ${tableStyles.tdBold}`}>{shipment.ipo}</td>
+                                    <td className={tableStyles.td}>{shipment.package_type || '-'}</td>
+                                    <td className={tableStyles.td}>{shipment.actual_weight || '-'}</td>
+                                    <td className={tableStyles.td} style={{ color: getStatusColor(shipment.shipment_status), fontWeight: 'bold' }}>
                                       {shipment.shipment_status}
-                                      {isInTransit && (
-                                        <span style={{ fontSize: '11px', color: '#666', marginLeft: '5px' }}>
-                                          (ожидает)
-                                        </span>
-                                      )}
+                                      {isInTransit && <span className={tableStyles.statusWaiting}>(ожидает)</span>}
                                     </td>
                                   </tr>
                                 );
@@ -389,25 +264,12 @@ export const TransferActsPage = () => {
                           </table>
                         </div>
                       ) : (
-                        <div style={{ 
-                          padding: '20px', 
-                          textAlign: 'center', 
-                          color: '#999',
-                          backgroundColor: '#f5f5f5',
-                          borderRadius: '4px'
-                        }}>
+                        <div className={tableStyles.noShipments}>
                           Нет данных о посылках в этом акте
                         </div>
                       )}
 
-                      {/* Actions */}
-                      <div style={{ 
-                        marginTop: '20px',
-                        paddingTop: '20px',
-                        borderTop: '1px solid #eee',
-                        display: 'flex',
-                        justifyContent: 'flex-end'
-                      }}>
+                      <div className={tableStyles.actActions}>
                         <Button
                           variant="primary"
                           onClick={() => handleReceiveAct(act.act_number)}
@@ -425,19 +287,10 @@ export const TransferActsPage = () => {
           )}
         </div>
 
-        {/* Статистика */}
-        <div style={{ 
-          marginTop: '20px',
-          padding: '15px',
-          backgroundColor: '#f5f5f5',
-          borderRadius: '4px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          color: '#666'
-        }}>
+        <div className={tableStyles.footerStats}>
           <span>Всего актов: <strong>{actsWithShipments.length}</strong></span>
-          <span>Активных: <strong style={{ color: '#2196F3' }}>{activeActs.length}</strong></span>
-          <span>Завершенных: <strong style={{ color: '#4CAF50' }}>{actsWithShipments.length - activeActs.length}</strong></span>
+          <span>Активных: <strong className={tableStyles.footerStatActive}>{activeActs.length}</strong></span>
+          <span>Завершенных: <strong className={tableStyles.footerStatCompleted}>{actsWithShipments.length - activeActs.length}</strong></span>
         </div>
       </main>
       <Footer />
