@@ -24,7 +24,7 @@ const EMPLOYEE_FORM_CONFIG = {
         ),
         inputProps: {
             label: 'Табельный номер',
-            placeholder: '00001',
+            placeholder: '123456',
             required: true,
         },
     },

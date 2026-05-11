@@ -633,7 +633,7 @@ export const PickupPointFormPage = () => {
               </h2>
 
               {specialSchedules.length === 0 ? (
-                <p style={{ color: '#666', fontStyle: 'italic' }}>Нет специальных расписаний</p>
+                <p style={{ color: '#777', fontStyle: 'italic' }}>Нет специальных расписаний</p>
               ) : (
                 <div className={styles.specialSchedules}>
                   {specialSchedules.map((schedule, idx) => (

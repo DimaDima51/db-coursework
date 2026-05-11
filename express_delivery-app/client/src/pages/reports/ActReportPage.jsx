@@ -261,7 +261,7 @@ export const ActReportPage = () => {
           .signature-block { text-align: center; }
           .signature-line { border-bottom: 1px solid #000; margin: 30px 0 8px 0; width: 100%; }
           .signature-label { font-size: 12px; }
-          .footer-text { margin-top: 30px; font-size: 11px; color: #666; text-align: center; }
+          .footer-text { margin-top: 30px; font-size: 11px; color: #777; text-align: center; }
           @media print { body { padding: 30px; } @page { margin: 20mm; } }
         </style>
       </head>
@@ -681,7 +681,7 @@ export const ActReportPage = () => {
             Всего актов: <strong>{actsWithShipments.length}</strong>
           </span>
           <span>
-            Завершенных (скрыто): <strong style={{ color: '#666' }}>{actsWithShipments.length - activeActs.length}</strong>
+            Завершенных (скрыто): <strong style={{ color: '#777' }}>{actsWithShipments.length - activeActs.length}</strong>
           </span>
         </div>
 
@@ -782,7 +782,7 @@ export const ActReportPage = () => {
           backgroundColor: 'rgba(255,255,255,0.02)',
           borderRadius: '8px',
           fontSize: '13px',
-          color: '#666'
+          color: '#777'
         }}>
           Показано активных актов: <strong>{filteredActs.length}</strong>
           {searchActNumber && <span> (поиск: "{searchActNumber}")</span>}

@@ -90,8 +90,10 @@ export const OrderCreatePage = () => {
 
   useEffect(() => {
     if (!form.ipo) {
-      const timestamp = Date.now().toString().substring(0, 15);
-      setForm(prev => ({ ...prev, ipo: timestamp }));
+      const timestamp = Date.now().toString();
+      const randomDigit = Math.floor(Math.random() * 10);
+      const ipo = (timestamp + randomDigit).substring(0, 14);
+      setForm(prev => ({ ...prev, ipo: ipo }));
     }
   }, []);
 

@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Создать новый тариф
-router.post('/', requireRole(['Системный администратор']), async (req, res) => {
+router.post('/', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const {
       tariff_code,
@@ -58,7 +58,7 @@ router.post('/', requireRole(['Системный администратор']),
 });
 
 // Обновить тариф
-router.put('/:tariff_code', requireRole(['Системный администратор']), async (req, res) => {
+router.put('/:tariff_code', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const { tariff_code } = req.params;
     const {
@@ -94,7 +94,7 @@ router.put('/:tariff_code', requireRole(['Системный администр�
 });
 
 // Удалить тариф
-router.delete('/:tariff_code', requireRole(['Системный администратор']), async (req, res) => {
+router.delete('/:tariff_code', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const { tariff_code } = req.params;
 

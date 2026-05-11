@@ -156,7 +156,7 @@ export const OrderListPage = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Введите IPO, номер паспорта, статус или тип..."
           />
-          <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+          <div style={{ marginTop: '10px', color: '#777', fontSize: '14px' }}>
             Найдено отправлений: <strong>{filteredShipments.length}</strong>
             {searchTerm && shipments.length !== filteredShipments.length && (
               <span> (из {shipments.length})</span>
@@ -176,7 +176,7 @@ export const OrderListPage = () => {
             </label>
             {selectedShipments.size > 0 && (
               <>
-                <span style={{ color: '#666' }}>|</span>
+                <span style={{ color: '#777' }}>|</span>
                 <span>Выбрано: <strong>{selectedShipments.size}</strong></span>
                 <Button 
                   variant="primary"
@@ -274,7 +274,7 @@ export const OrderListPage = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: '14px',
-            color: '#666'
+            color: '#777'
           }}>
             <span>
               Показано: <strong>{filteredShipments.length}</strong> отправлений
