@@ -45,7 +45,7 @@ function App() {
             <Route
               path="/clients"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <ClientsPage />
                 </RequireAuth>
               }
@@ -53,7 +53,7 @@ function App() {
             <Route
               path="/clients/new"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <ClientFormPage />
                 </RequireAuth>
               }
@@ -61,7 +61,7 @@ function App() {
             <Route
               path="/clients/create"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <ClientFormPage />
                 </RequireAuth>
               }
@@ -69,7 +69,7 @@ function App() {
             <Route
               path="/clients/edit/:passport_number"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <ClientFormPage />
                 </RequireAuth>
               }
@@ -111,7 +111,7 @@ function App() {
             <Route
               path="/orders"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор', 'Курьер']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта', 'Курьер']}>
                   <OrderListPage />
                 </RequireAuth>
               }
@@ -119,7 +119,7 @@ function App() {
             <Route
               path="/orders/create"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <OrderCreatePage />
                 </RequireAuth>
               }
@@ -127,7 +127,7 @@ function App() {
             <Route
               path="/orders/issue"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <OrderIssuePage />
                 </RequireAuth>
               }
@@ -135,7 +135,7 @@ function App() {
             <Route
               path="/orders/unclaimed"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <OrderUnclaimedPage />
                 </RequireAuth>
               }
@@ -143,7 +143,7 @@ function App() {
             <Route
               path="/orders/transfer-acts"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор', 'Курьер']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта', 'Курьер']}>
                   <TransferActsPage />
                 </RequireAuth>
               }
@@ -151,7 +151,7 @@ function App() {
             <Route
               path="/orders/transfer-acts/create"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <TransferActFormPage />
                 </RequireAuth>
               }
@@ -160,7 +160,7 @@ function App() {
             <Route
               path="/reports/movement"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <MovementReportPage />
                 </RequireAuth>
               }
@@ -168,7 +168,7 @@ function App() {
             <Route
               path="/reports/act"
               element={
-                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Оператор']}>
+                <RequireAuth allowedRoles={['Системный администратор', 'Администратор пункта', 'Сотрудник пункта']}>
                   <ActReportPage />
                 </RequireAuth>
               }

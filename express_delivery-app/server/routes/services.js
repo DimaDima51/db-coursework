@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 // Создать новую услугу
-router.post('/', requireRole(['Системный администратор']), async (req, res) => {
+router.post('/', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const { service_name, service_category } = req.body;
 
@@ -50,7 +50,7 @@ router.post('/', requireRole(['Системный администратор']),
 });
 
 // Обновить услугу
-router.put('/:service_name', requireRole(['Системный администратор']), async (req, res) => {
+router.put('/:service_name', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const { service_name } = req.params;
     const { service_category, new_service_name } = req.body;
@@ -81,7 +81,7 @@ router.put('/:service_name', requireRole(['Системный администр
   }
 });
 
-router.delete('/:service_name', requireRole(['Системный администратор']), async (req, res) => {
+router.delete('/:service_name', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const { service_name } = req.params;
 

@@ -172,9 +172,9 @@ export const OrderIssuePage = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Введите IPO, номер паспорта или статус..."
           />
-          <div style={{ marginTop: '10px', color: '#666', fontSize: '14px' }}>
+          <div style={{ marginTop: '10px', color: '#ffffff', fontSize: '14px' }}>
             Найдено посылок: <strong>{filteredShipments.length}</strong> | 
-            Можно выдать: <strong style={{ color: '#FF9800' }}>{issueableShipments.length}</strong>
+            Можно выдать: <strong style={{ color: '#ffffff' }}>{issueableShipments.length}</strong>
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export const OrderIssuePage = () => {
             </label>
             {selectedShipments.size > 0 && (
               <>
-                <span style={{ color: '#666' }}>|</span>
+                <span style={{ color: '#777' }}>|</span>
                 <span>Выбрано: <strong>{selectedShipments.size}</strong></span>
                 <Button 
                   variant="primary"
@@ -324,7 +324,7 @@ export const OrderIssuePage = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: '14px',
-            color: '#666'
+            color: '#777'
           }}>
             <span>Показано: <strong>{filteredShipments.length}</strong> посылок</span>
             <span>

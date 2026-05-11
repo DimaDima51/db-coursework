@@ -3,7 +3,7 @@ import pool from '../db.js';
 import { requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
-router.use(requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта']));
+router.use(requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']));
 
 router.get('/', async (req, res) => {
   try {

@@ -120,10 +120,6 @@ router.post('/', async (req, res) => {
 
     const { position_name, pickup_point_index: userPickupPoint } = req.user;
 
-    if (position_name !== 'Системный администратор' && pickup_point_index !== userPickupPoint) {
-      return res.status(403).json({ message: 'Нельзя создавать отправление для другого отделения' });
-    }
-
     await connection.query(
       `INSERT INTO shipment (
         ipo, sender_passport_number, receiver_passport_number, staff_number,
@@ -146,7 +142,7 @@ router.post('/', async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         ipo, cash_register_number, shift_number, staff_number,
-        shipping_method, registration_date, operation_time
+        "Пункт выдачи", registration_date, operation_time
       ]
     );
 

@@ -248,7 +248,7 @@ export const FinanceReportPage = () => {
           }
           .header .period {
             font-size: 14px;
-            color: #666;
+            color: #777;
             margin-top: 10px;
           }
           .summary-cards {

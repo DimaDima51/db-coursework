@@ -75,7 +75,7 @@ router.get('/:index/schedules', async (req, res) => {
 });
 
 // POST /api/pickup-points - создать новый пункт выдачи
-router.post('/', requireRole(['Системный администратор']), async (req, res) => {
+router.post('/', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -155,7 +155,7 @@ router.post('/', requireRole(['Системный администратор']),
 });
 
 // PUT /api/pickup-points/:index - обновить пункт выдачи
-router.put('/:index', requireRole(['Системный администратор']), async (req, res) => {
+router.put('/:index', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   const connection = await pool.getConnection();
   
   try {
@@ -240,7 +240,7 @@ router.put('/:index', requireRole(['Системный администрато�
 });
 
 // DELETE /api/pickup-points/:index - удалить пункт выдачи
-router.delete('/:index', requireRole(['Системный администратор']), async (req, res) => {
+router.delete('/:index', requireRole(['Системный администратор', 'Администратор', 'Сотрудник пункта', 'Курьер']), async (req, res) => {
   try {
     const { index } = req.params;
 

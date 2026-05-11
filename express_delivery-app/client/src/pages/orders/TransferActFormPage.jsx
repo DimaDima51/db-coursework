@@ -27,7 +27,7 @@ export const TransferActFormPage = () => {
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(true);
   const [errors, setErrors] = useState({});
-  
+
   const [employees, setEmployees] = useState([]);
   const [shipments, setShipments] = useState([]);
   const [selectedShipments, setSelectedShipments] = useState(new Set());
@@ -40,8 +40,8 @@ export const TransferActFormPage = () => {
   });
 
   const availableShipments = useMemo(() => {
-    return shipments.filter(s => 
-      s.shipment_status !== 'Выдана' && 
+    return shipments.filter(s =>
+      s.shipment_status !== 'Выдана' &&
       s.shipment_status !== 'Утилизирована' &&
       s.shipment_status !== 'Не востребована'
     );
@@ -66,7 +66,7 @@ export const TransferActFormPage = () => {
     }).length;
   }, [selectedShipments, shipments]);
 
-  const employeeOptions = useMemo(() => 
+  const employeeOptions = useMemo(() =>
     employees.map(emp => ({
       value: emp.staff_number,
       label: `${emp.surname} ${emp.first_name} ${emp.patronymic || ''} (№${emp.staff_number})`
@@ -95,8 +95,9 @@ export const TransferActFormPage = () => {
 
   useEffect(() => {
     if (!form.act_number) {
-      const timestamp = Math.floor(Date.now() / 1000);
-      setForm(prev => ({ ...prev, act_number: timestamp.toString() }));
+      // Генерируем случайный номер от 1 до 999999
+      const randomNumber = Math.floor(Math.random() * 999999) + 1;
+      setForm(prev => ({ ...prev, act_number: randomNumber.toString() }));
     }
   }, []);
 
@@ -105,9 +106,7 @@ export const TransferActFormPage = () => {
     if (!form.act_number.trim()) newErrors.act_number = 'Номер акта обязателен';
     if (!form.sender_staff_number) newErrors.sender_staff_number = 'Отправляющий сотрудник обязателен';
     if (!form.receiver_staff_number) newErrors.receiver_staff_number = 'Принимающий сотрудник обязателен';
-    if (form.sender_staff_number === form.receiver_staff_number) {
-      newErrors.receiver_staff_number = 'Отправляющий и принимающий сотрудники должны быть разными';
-    }
+
     if (selectedShipments.size === 0) newErrors.shipments = 'Выберите хотя бы одну посылку';
     if (allSelectedReceived) newErrors.shipments = 'Все выбранные посылки уже получены. Акт можно закрыть.';
     return newErrors;
@@ -272,7 +271,7 @@ export const TransferActFormPage = () => {
                   </Button>
                 )}
               </div>
-              
+
               {errors.shipments && (
                 <div className={tableStyles.errorMessage}>{errors.shipments}</div>
               )}
@@ -324,9 +323,9 @@ export const TransferActFormPage = () => {
                         {availableShipments.map(shipment => {
                           const isReceived = shipment.shipment_status === 'Получено';
                           const isSelected = selectedShipments.has(shipment.ipo);
-                          
+
                           return (
-                            <tr 
+                            <tr
                               key={shipment.ipo}
                               className={`${tableStyles.tr} ${isReceived ? tableStyles.trReceived : ''} ${isSelected ? tableStyles.trSelected : ''}`}
                               onClick={() => !isReceived && handleShipmentSelect(shipment.ipo)}
@@ -338,7 +337,7 @@ export const TransferActFormPage = () => {
                                   <input
                                     type="checkbox"
                                     checked={isSelected}
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                     onClick={(e) => e.stopPropagation()}
                                   />
                                 )}
@@ -363,9 +362,9 @@ export const TransferActFormPage = () => {
             {errors.submit && <div className={styles.errorBlock}>{errors.submit}</div>}
 
             <div className={styles.buttonGroup}>
-              <Button 
-                type="submit" 
-                variant="primary" 
+              <Button
+                type="submit"
+                variant="primary"
                 loading={loading}
                 disabled={allSelectedReceived}
               >
