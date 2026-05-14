@@ -50,6 +50,10 @@
   transition: background-color 0.2s ease;
 }
 
+.criticalRow {
+  background-color: #ffe6e6 !important;
+}
+
 .tr[role="button"] {
   cursor: pointer;
 }

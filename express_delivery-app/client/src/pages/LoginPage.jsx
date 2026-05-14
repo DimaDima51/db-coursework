@@ -33,32 +33,51 @@ export const LoginPage = () => {
 
   return (
     <div className={styles.pageWrapper}>
-      <main className={styles.content} style={{ maxWidth: 420, margin: '72px auto' }}>
-        <h2>Вход в систему</h2>
-        <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 12 }}>
-          <label>
-            Табельный номер
-            <input
-              type="text"
-              name="staff_number"
-              value={form.staff_number}
-              onChange={(e) => setForm((prev) => ({ ...prev, staff_number: e.target.value }))}
-            />
-          </label>
-          <label>
-            Пароль
-            <input
-              type="password"
-              name="password"
-              value={form.password}
-              onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
-            />
-          </label>
-          <button type="submit" disabled={loading} style={{ padding: '10px 16px' }}>
-            {loading ? 'Вход...' : 'Войти'}
-          </button>
-          {error && <div style={{ color: 'var(--danger)', marginTop: 8 }}>{error}</div>}
-        </form>
+      <main className={`${styles.content} ${styles.loginPage}`}>
+        <section className={styles.loginHero}>
+          <span className={styles.authBadge}>Авторизация</span>
+          <h1 className={styles.loginHeroTitle}>Панель управления экспресс-доставкой</h1>
+          <p className={styles.loginHeroText}>
+            Войдите в систему для работы с заказами, клиентами, тарифами, пунктами выдачи и отчетами.
+          </p>
+        </section>
+
+        <section className={styles.loginCard}>
+          <div className={styles.loginCardHeader}>
+            <h2 className={styles.loginTitle}>Вход в аккаунт</h2>
+            <p className={styles.loginSubtitle}>Укажите табельный номер и пароль сотрудника</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className={styles.loginForm}>
+            <label className={styles.inputLabel}>
+              Табельный номер
+              <input
+                className={styles.inputField}
+                type="text"
+                name="staff_number"
+                value={form.staff_number}
+                onChange={(e) => setForm((prev) => ({ ...prev, staff_number: e.target.value }))}
+              />
+            </label>
+
+            <label className={styles.inputLabel}>
+              Пароль
+              <input
+                className={styles.inputField}
+                type="password"
+                name="password"
+                value={form.password}
+                onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
+              />
+            </label>
+
+            <button type="submit" disabled={loading} className={styles.submitButton}>
+              {loading ? 'Вход...' : 'Войти'}
+            </button>
+
+            {error && <div className={styles.errorMessage}>{error}</div>}
+          </form>
+        </section>
       </main>
       <Footer />
     </div>

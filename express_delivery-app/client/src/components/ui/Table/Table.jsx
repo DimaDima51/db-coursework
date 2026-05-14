@@ -6,7 +6,9 @@ export const Table = ({
   emptyMessage = 'Нет данных для отображения',
   onRowClick,
   actions,
-  className = ''
+  className = '',
+  renderRow,
+  rowClassName
 }) => {
   // Если заголовки - массив строк, преобразуем в объекты { key, label }
   const normalizedHeaders = headers.map(header => 
@@ -40,12 +42,16 @@ export const Table = ({
           {data.map((row, rowIndex) => (
             <tr 
               key={rowIndex} 
-              className={styles.tr}
+              className={`${styles.tr} ${rowClassName && rowClassName(row) === 'critical-row' ? styles.criticalRow : ''}`}
               onClick={() => onRowClick && onRowClick(row, rowIndex)}
               role={onRowClick ? "button" : undefined}
               tabIndex={onRowClick ? 0 : undefined}
             >
-              {normalizedHeaders.map((header, colIndex) => (
+              {renderRow ? renderRow(row).map((cell, cellIndex) => (
+                <td key={cellIndex} className={styles.td}>
+                  {cell}
+                </td>
+              )) : normalizedHeaders.map((header, colIndex) => (
                 <td key={colIndex} className={styles.td}>
                   {row[header.key] !== undefined ? row[header.key] : ''}
                 </td>
